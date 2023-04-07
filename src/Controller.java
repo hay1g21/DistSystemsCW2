@@ -41,20 +41,36 @@ public class Controller {
             ss = new ServerSocket(cport);
             while(true) {
                 try {
+                    System.out.println("Back to accepting connections: Current connections " + count);
                     Socket dStore = ss.accept(); //accepts a datastore socket
                     if(dStore != null){
                         System.out.println("DataStore accepted: " + dStore + " count is now " + count);
 
-                        //new Thread(new DataStoreThread(dStore)).start(); //allows multithreading of datastores
 
 
                     }
+
                     //Textual messages
                     BufferedReader in = new BufferedReader(new InputStreamReader(dStore.getInputStream())); //listens from port
                     PrintWriter out = new PrintWriter(dStore.getOutputStream(), true); //prints to datastore, replies
                     //Data messages (For testing)
                     InputStream inData = dStore.getInputStream(); //gets
                     OutputStream outData = dStore.getOutputStream(); //sends
+
+                    String line;
+                    while((line = in.readLine()) != null) {
+                        System.out.println(line + " received");
+                        if (line.equals("JOIN")) {
+                            count++;
+                            System.out.println("JOINED + " + count);
+                            new Thread(new DataStoreThread(dStore)).start(); //allows multithreading of datastores
+                            break;
+                        } else {
+                            System.out.println("Did not join");
+                            break;
+                        }
+                    }
+                    /*
                     String line;
                     //blocks until a line is read. gives null if the connection is closed
                     while((line = in.readLine()) != null){
@@ -62,34 +78,28 @@ public class Controller {
                         if(line.equals("JOIN")){
                             count++;
                             System.out.println("JOINED + " + count);
-                            out.println("Hello datastore");
-                            //try sending a file to it
-                            File toSend = new File("basic.txt");
-                            FileInputStream inp = new FileInputStream(toSend);
-                            byte[] buf = new byte[1000]; int buflen;
-                            while ((buflen=inp.read(buf)) != -1){
-                                System.out.print("*");
-                                outData.write(buf,0,buflen);
-                            }
-                            System.out.println("Finished reading");
-                            inp.close();
                         }else{
-                            System.out.println("Not a datastore, removing client");
+                            System.out.println("Not a datastore but nothing done");
                         }
                         if(count >= R){
                             System.out.println("Can accept client commands now");
-                            /*
+
                             Socket client = ss.accept(); //accepts client
                             if(client != null){
                                 System.out.println("Client accepted: " + client);
                             }
 
-                             */
+
                         }
                     }
+                    */
+
+                    /*
                     //close connection once finished
                     System.out.println("Closing");
                     dStore.close();
+
+                    */
                 } catch(Exception e) { System.err.println("error: " + e); }
             }
         } catch(Exception e) { System.err.println("error: " + e);
@@ -112,13 +122,38 @@ public class Controller {
         }
 
         public void run() {
+            receiveMessage();
+        }
+
+        public void receiveMessage(){
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(dataStore.getInputStream()));
+                //Textual messages
+                BufferedReader in = new BufferedReader(new InputStreamReader(dataStore.getInputStream())); //listens from port
+                PrintWriter out = new PrintWriter(dataStore.getOutputStream(), true); //prints to datastore, replies
+                //Data messages (For testing)
+                InputStream inData = dataStore.getInputStream(); //gets
+                OutputStream outData = dataStore.getOutputStream(); //sends
                 String line;
+
+                out.println("Acknowledged connection");
                 while((line = in.readLine()) != null){
-                    System.out.println(line+" received");
-                    if(line.equals("JOIN")){
-                        System.out.println("JOINED");
+                    System.out.println(line+" received, now choosing what to do");
+                    if(line.equals("SEND")){
+                        System.out.println("Sending");
+                        //send file logic
+                        //out.println("Hello datastore I'm sending a file");
+                        Thread.sleep(1000);
+                        File toSend = new File("basic.txt");
+                        FileInputStream inp = new FileInputStream(toSend);
+                        byte[] buf = new byte[1000]; int buflen;
+                        while ((buflen=inp.read(buf)) != -1){
+                            System.out.println("*");
+                            outData.write(buf,0,buflen);
+                        }
+                        System.out.println("Finished reading");
+                        inp.close();
+                    }else{
+                        System.out.println("Nothing special with this line");
                     }
                 }
                 dataStore.close();

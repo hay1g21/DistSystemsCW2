@@ -58,19 +58,19 @@ public class DataStore {
                     System.out.println(line + " received");
                     break;
                 }
-                out.println("hello");
+                out.println("SEND");
                 //try reading a file, needs a fileoutput stream
                 //gets a buffer
                 System.out.println("Waiting for file");
                 byte[] buf = new byte[1000]; int buflen;
                 while ((buflen=inData.read(buf)) != -1){
-                    System.out.print("*");
+                    System.out.println("*");
                     fileOut.write(buf,0,buflen);
-                    System.out.println("Hello");
+                    System.out.println("File Finished Reading");
                     break;
 
                 }
-                System.out.println("Done waiting");
+                System.out.println("Done waiting, looping back");
                 //inData.close();
                 fileOut.close();
             }
