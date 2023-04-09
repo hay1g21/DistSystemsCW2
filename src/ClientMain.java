@@ -20,9 +20,9 @@ public class ClientMain {
 			if (!downloadFolder.mkdir()) throw new RuntimeException("Cannot create download folder (folder absolute path: " + downloadFolder.getAbsolutePath() + ")");
 		
 		// this client expects a 'to_store' folder in the current directory; all files to be stored in the store will be collected from this folder
-		File uploadFolder = new File("to_store");
+		File uploadFolder = new File("clientto_store");
 		if (!uploadFolder.exists())
-			throw new RuntimeException("to_store folder does not exist");
+			throw new RuntimeException("clientto_store folder does not exist");
 		
 		// launch a single client
 		testClient(cport, timeout, downloadFolder, uploadFolder);
@@ -91,10 +91,16 @@ public class ClientMain {
 		
 			try {
 				client.connect();
+				client.send("Client I'm a client");
+				File fileList[] = uploadFolder.listFiles();
+				System.out.println(fileList[0].getName());
+
+				client.store(fileList[0]);
+
 				while(true) {
 					try{
-						client.send("Hii");
-						break;
+
+
 					}catch (Exception e){
 						e.printStackTrace();
 					}

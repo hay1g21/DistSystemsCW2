@@ -1,5 +1,8 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+
 public class DataStore {
     //listen on different ports, establish connection as soon as they start
 
@@ -34,7 +37,8 @@ public class DataStore {
         try {
             InetAddress address = InetAddress.getLocalHost();
             controllerSocket = new Socket(address, cport); //sends to cport -controller listens at this port
-            //dSSocket = new ServerSocket(port); //port to listen for messages this way, make it server socket??
+            dSSocket = new ServerSocket(port); //port to listen for messages this way, make it server socket??
+
             //System.out.println("Socket started on port:" + dSSocket.getLocalPort());
             PrintWriter out = new PrintWriter(controllerSocket.getOutputStream(), true);
             //listens to textual messages from the controller
@@ -43,11 +47,11 @@ public class DataStore {
             InputStream inData = controllerSocket.getInputStream();
             //filereading test
 
-            File testFile = new File("to_store/file1.txt");
+            File testFile = new File("to_store/file2.txt");
             System.out.println(testFile.getAbsolutePath());
             FileOutputStream fileOut = new FileOutputStream(testFile);
 
-            out.println(Protocol.JOIN_TOKEN);
+            out.println(Protocol.JOIN_TOKEN + " " + port);
 
             while(true){
                 //Thread.sleep(1000);
@@ -83,5 +87,49 @@ public class DataStore {
                 uploadFolder.delete();
             }
         }
+    }
+
+    static class DataStoreReceiver implements Runnable{
+
+        ServerSocket ds;
+
+
+        DataStoreReceiver (ServerSocket ds){
+            this.ds = ds;
+            //listPorts.add(134);
+        }
+
+        public void run() {
+            receiveMessage();
+        }
+
+        public void receiveMessage(){
+            try {
+                System.out.println("Accepting Connections from port: " + ds.getLocalPort());
+                Socket client = ds.accept();
+                //Textual messages
+                BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
+                PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
+                //Data messages (For testing)
+                InputStream inData = client.getInputStream(); //gets
+                OutputStream outData = client.getOutputStream(); //sends
+                String line;
+
+                //out.println("Acknowledged connection to client");
+                while((line = in.readLine()) != null){
+                    System.out.println(line+" received, now choosing what to do");
+                    if(line.contains("STORE")){
+
+                    }else{
+                        System.out.println("Nothing special with this line");
+                    }
+                }
+                System.out.println("Closing client");
+                client.close();
+            } catch(Exception e) {
+                System.err.println("error: " + e);
+            }
+        }
+
     }
 }

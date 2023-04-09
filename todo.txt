@@ -1,0 +1,4 @@
+1. Countdown latch for ACKs
+2. send port num to client
+3. send file info to datastore
+4. datastore to talk to client

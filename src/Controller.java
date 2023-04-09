@@ -1,9 +1,11 @@
 import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 public class Controller {
     //controller starts first with R as an argument
@@ -29,7 +31,11 @@ public class Controller {
         int timeout = 1000;
         int rebalance_period = 100000;
 
+        //for threads and acks
+        CountDownLatch cd = new CountDownLatch(R);
 
+        //holds list of datastore ports to send to client
+        ArrayList<Integer> dSPorts = new ArrayList<Integer>();
         System.out.println("Server started on port: " + cport);
         ServerSocket ss = null; //makes server socket
 
@@ -44,10 +50,7 @@ public class Controller {
                     System.out.println("Back to accepting connections: Current connections " + count);
                     Socket dStore = ss.accept(); //accepts a datastore socket
                     if(dStore != null){
-                        System.out.println("DataStore accepted: " + dStore + " count is now " + count);
-
-
-
+                        System.out.println("Connection accepted: " + dStore);
                     }
 
                     //Textual messages
@@ -60,13 +63,20 @@ public class Controller {
                     String line;
                     while((line = in.readLine()) != null) {
                         System.out.println(line + " received");
-                        if (line.equals("JOIN")) {
+                        if (line.contains("JOIN")) {
                             count++;
                             System.out.println("JOINED + " + count);
+                            //parse out port
+                            int portNum = Integer.parseInt(line.split(" ")[1]);
+                            System.out.println("Port num: " + portNum);
+                            //add port num
+                            dSPorts.add(portNum);
+                            System.out.println("Num ports: "+ dSPorts.size());
                             new Thread(new DataStoreThread(dStore)).start(); //allows multithreading of datastores
                             break;
                         } else {
-                            System.out.println("Did not join");
+                            System.out.println("Client is joining");
+                            new Thread(new ClientThread(dStore,dSPorts,R)).start(); //allows multithreading of datastores
                             break;
                         }
                     }
@@ -157,6 +167,69 @@ public class Controller {
                     }
                 }
                 dataStore.close();
+            } catch(Exception e) {
+                System.err.println("error: " + e);
+            }
+        }
+
+    }
+
+    static class ClientThread implements Runnable{
+        Socket client;
+        ArrayList<Integer> listPorts;
+
+        int R;
+        ClientThread (Socket client, ArrayList<Integer> listPorts, int R){
+            this.client = client;
+            this.listPorts = listPorts;
+            this.R = R;
+            //listPorts.add(134);
+        }
+
+        public void run() {
+            receiveMessage();
+        }
+
+        public void receiveMessage(){
+            try {
+                //Textual messages
+                BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
+                PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
+                //Data messages (For testing)
+                InputStream inData = client.getInputStream(); //gets
+                OutputStream outData = client.getOutputStream(); //sends
+                String line;
+
+                //out.println("Acknowledged connection to client");
+                while((line = in.readLine()) != null){
+                    System.out.println(line+" received, now choosing what to do");
+                    if(line.contains("STORE")){
+                        System.out.println("Client wants to store file: ");
+                        //parse message
+                        String lines[] = line.split(" ");
+                        String fileName = lines[1];
+                        String size = lines[2];
+                        System.out.println("Preparing to store " + fileName + "of size " + size);
+                        //get R ports
+                        String chosenPorts = "";
+                        //if not enough datastores send error message
+                        if(listPorts.size() < R){
+                            System.out.println("Not enough datastores");
+                            out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
+                            break;
+                        }else{
+                            for(int i = 0; i < R; i++){
+                                chosenPorts = chosenPorts + " " + listPorts.get(i);
+                            }
+                            System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                            out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                        }
+                    }else{
+                        System.out.println("Nothing special with this line");
+                    }
+                }
+                System.out.println("Closing client");
+                client.close();
             } catch(Exception e) {
                 System.err.println("error: " + e);
             }
