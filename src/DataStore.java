@@ -38,7 +38,7 @@ public class DataStore {
             InetAddress address = InetAddress.getLocalHost();
             controllerSocket = new Socket(address, cport); //sends to cport -controller listens at this port
             dSSocket = new ServerSocket(port); //port to listen for messages this way, make it server socket??
-
+            new Thread(new DataStoreReceiver(dSSocket,controllerSocket,uploadFolder)).start();
             //System.out.println("Socket started on port:" + dSSocket.getLocalPort());
             PrintWriter out = new PrintWriter(controllerSocket.getOutputStream(), true);
             //listens to textual messages from the controller
@@ -62,6 +62,7 @@ public class DataStore {
                     System.out.println(line + " received");
                     break;
                 }
+                /*
                 out.println("SEND");
                 //try reading a file, needs a fileoutput stream
                 //gets a buffer
@@ -74,6 +75,8 @@ public class DataStore {
                     break;
 
                 }
+
+                 */
                 System.out.println("Done waiting, looping back");
                 //inData.close();
                 fileOut.close();
@@ -92,11 +95,14 @@ public class DataStore {
     static class DataStoreReceiver implements Runnable{
 
         ServerSocket ds;
+        Socket cport; //server socket
+        File toStore;
 
-
-        DataStoreReceiver (ServerSocket ds){
+        DataStoreReceiver (ServerSocket ds, Socket cport, File toStore){
             this.ds = ds;
             //listPorts.add(134);
+            this.cport = cport;
+            this.toStore = toStore;
         }
 
         public void run() {
@@ -107,6 +113,7 @@ public class DataStore {
             try {
                 System.out.println("Accepting Connections from port: " + ds.getLocalPort());
                 Socket client = ds.accept();
+                System.out.println("Connection accepted : " + client);
                 //Textual messages
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
                 PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
@@ -115,11 +122,33 @@ public class DataStore {
                 OutputStream outData = client.getOutputStream(); //sends
                 String line;
 
+                //controller socket
+                PrintWriter outC = new PrintWriter(cport.getOutputStream(), true); //prints to datastore, replies
+
                 //out.println("Acknowledged connection to client");
                 while((line = in.readLine()) != null){
                     System.out.println(line+" received, now choosing what to do");
                     if(line.contains("STORE")){
+                        //get filename and size
+                        String[] split = line.split(" ");
+                        System.out.println("Storing file: " + split[1] + " with size " + split[2]);
+                        File newFile = new File(toStore + "/" + split[1]);
+                        byte[] buf = new byte[Integer.parseInt(split[2])];
+                        int buflen;
 
+                        FileOutputStream fileOut = new FileOutputStream(newFile);
+                        //send ack and prepare to read
+                        out.println(Protocol.ACK_TOKEN);
+                        //now read in file
+                        while ((buflen=inData.read(buf)) != -1){
+                            System.out.println("*Writing*");
+                            fileOut.write(buf,0,buflen);
+                            break;
+                        }
+                        System.out.println("Finished reading file " + newFile.getName());
+                        //send acknowledgement to controller
+                        outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());
+                        fileOut.close();
                     }else{
                         System.out.println("Nothing special with this line");
                     }

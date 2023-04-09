@@ -71,12 +71,13 @@ public class Controller {
                             System.out.println("Port num: " + portNum);
                             //add port num
                             dSPorts.add(portNum);
-                            System.out.println("Num ports: "+ dSPorts.size());
-                            new Thread(new DataStoreThread(dStore)).start(); //allows multithreading of datastores
+                            System.out.println("Num ports: " + dSPorts.size());
+                            new Thread(new DataStoreThread(dStore, cd)).start(); //allows multithreading of datastores
                             break;
-                        } else {
+                        }
+                        else {
                             System.out.println("Client is joining");
-                            new Thread(new ClientThread(dStore,dSPorts,R)).start(); //allows multithreading of datastores
+                            new Thread(new ClientThread(dStore,dSPorts,R, cd)).start(); //allows multithreading of datastores
                             break;
                         }
                     }
@@ -127,8 +128,11 @@ public class Controller {
 
     static class DataStoreThread implements Runnable{
         Socket dataStore;
-        DataStoreThread (Socket dataStore){
+
+        CountDownLatch latch;
+        DataStoreThread (Socket dataStore, CountDownLatch latch){
             this.dataStore = dataStore;
+            this.latch = latch;
         }
 
         public void run() {
@@ -148,24 +152,31 @@ public class Controller {
                 out.println("Acknowledged connection");
                 while((line = in.readLine()) != null){
                     System.out.println(line+" received, now choosing what to do");
-                    if(line.equals("SEND")){
+                    if(line.equals("SEND")) {
                         System.out.println("Sending");
                         //send file logic
                         //out.println("Hello datastore I'm sending a file");
                         Thread.sleep(1000);
                         File toSend = new File("basic.txt");
                         FileInputStream inp = new FileInputStream(toSend);
-                        byte[] buf = new byte[1000]; int buflen;
-                        while ((buflen=inp.read(buf)) != -1){
+                        byte[] buf = new byte[1000];
+                        int buflen;
+                        while ((buflen = inp.read(buf)) != -1) {
                             System.out.println("*");
-                            outData.write(buf,0,buflen);
+                            outData.write(buf, 0, buflen);
                         }
                         System.out.println("Finished reading");
                         inp.close();
+                    }else if (line.contains("STORE_ACK")){
+                        //countdown the latch
+                        System.out.println("Message has been sent, decrement ack");
+                        latch.countDown();
+
                     }else{
                         System.out.println("Nothing special with this line");
                     }
                 }
+                System.out.println("Datastore close");
                 dataStore.close();
             } catch(Exception e) {
                 System.err.println("error: " + e);
@@ -179,10 +190,13 @@ public class Controller {
         ArrayList<Integer> listPorts;
 
         int R;
-        ClientThread (Socket client, ArrayList<Integer> listPorts, int R){
+
+        CountDownLatch latch;
+        ClientThread (Socket client, ArrayList<Integer> listPorts, int R, CountDownLatch latch){
             this.client = client;
             this.listPorts = listPorts;
             this.R = R;
+            this.latch = latch;
             //listPorts.add(134);
         }
 
@@ -221,8 +235,15 @@ public class Controller {
                             for(int i = 0; i < R; i++){
                                 chosenPorts = chosenPorts + " " + listPorts.get(i);
                             }
-                            System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                            //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                             out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                            //now wait for acknowlegements
+                            System.out.println("Now waiting for countdown latch : value " + latch.getCount());
+
+                            latch.await();
+                            System.out.println("Latch complete");
+                            out.println(Protocol.STORE_COMPLETE_TOKEN);
+                            System.out.println("Finished");
                         }
                     }else{
                         System.out.println("Nothing special with this line");
