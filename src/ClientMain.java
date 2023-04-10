@@ -94,12 +94,19 @@ public class ClientMain {
 				client.send("Client I'm a client");
 				File fileList[] = uploadFolder.listFiles();
 				System.out.println(fileList[0].getName());
+				try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
 
-				client.store(fileList[0]);
 
+				System.out.println("Finished up store");
+
+
+				try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+				System.out.println("Finished up send agian store");
+
+				//now list
+				client.list();
 				while(true) {
 					try{
-
 
 					}catch (Exception e){
 						e.printStackTrace();

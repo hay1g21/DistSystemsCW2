@@ -20,10 +20,10 @@ public class DataStore {
         int port = Integer.parseInt(args[0]);
         //int cport = Integer.parseInt(args[1]);
         //int timeout = Integer.parseInt(args[2]);
-        //String file_folder = Integer.parseInt(args[3]);
+        String file_folder = args[3];
         int cport = 12345;
         int timeout = 1000; //ms
-        String file_folder = "to_store";
+        //String file_folder = "to_store";
 
         //makes a directory
         File uploadFolder = new File(file_folder);
@@ -47,7 +47,7 @@ public class DataStore {
             InputStream inData = controllerSocket.getInputStream();
             //filereading test
 
-            File testFile = new File("to_store/file2.txt");
+            File testFile = new File(uploadFolder+"/file2.txt");
             System.out.println(testFile.getAbsolutePath());
             FileOutputStream fileOut = new FileOutputStream(testFile);
 
@@ -106,57 +106,71 @@ public class DataStore {
         }
 
         public void run() {
-            receiveMessage();
+            try{
+                receiveMessage();
+            } catch(Exception e) { System.err.println("error: " + e);
+            } finally {
+                if (ds != null)
+                    try {
+                        System.out.println("Server Socket Closing");
+                        ds.close();
+
+                    } catch (IOException e) { System.err.println("error: " + e); }
+            }
+
         }
 
         public void receiveMessage(){
-            try {
-                System.out.println("Accepting Connections from port: " + ds.getLocalPort());
-                Socket client = ds.accept();
-                System.out.println("Connection accepted : " + client);
-                //Textual messages
-                BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
-                PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
-                //Data messages (For testing)
-                InputStream inData = client.getInputStream(); //gets
-                OutputStream outData = client.getOutputStream(); //sends
-                String line;
+            while(true) {
+                try {
 
-                //controller socket
-                PrintWriter outC = new PrintWriter(cport.getOutputStream(), true); //prints to datastore, replies
+                    System.out.println("Accepting Connections from port: " + ds.getLocalPort());
+                    Socket client = ds.accept();
+                    System.out.println("Connection accepted : " + client);
+                    //Textual messages
+                    BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
+                    PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
+                    //Data messages (For testing)
+                    InputStream inData = client.getInputStream(); //gets
+                    OutputStream outData = client.getOutputStream(); //sends
+                    String line;
 
-                //out.println("Acknowledged connection to client");
-                while((line = in.readLine()) != null){
-                    System.out.println(line+" received, now choosing what to do");
-                    if(line.contains("STORE")){
-                        //get filename and size
-                        String[] split = line.split(" ");
-                        System.out.println("Storing file: " + split[1] + " with size " + split[2]);
-                        File newFile = new File(toStore + "/" + split[1]);
-                        byte[] buf = new byte[Integer.parseInt(split[2])];
-                        int buflen;
+                    //controller socket
+                    PrintWriter outC = new PrintWriter(cport.getOutputStream(), true); //prints to datastore, replies
 
-                        FileOutputStream fileOut = new FileOutputStream(newFile);
-                        //send ack and prepare to read
-                        out.println(Protocol.ACK_TOKEN);
-                        //now read in file
-                        while ((buflen=inData.read(buf)) != -1){
-                            System.out.println("*Writing*");
-                            fileOut.write(buf,0,buflen);
-                            break;
+                    //out.println("Acknowledged connection to client");
+                    while ((line = in.readLine()) != null) {
+                        System.out.println(line + " received, now choosing what to do");
+                        if (line.contains("STORE")) {
+                            //get filename and size
+                            String[] split = line.split(" ");
+                            System.out.println("Storing file: " + split[1] + " with size " + split[2]);
+                            File newFile = new File(toStore + "/" + split[1]);
+                            byte[] buf = new byte[Integer.parseInt(split[2])];
+                            int buflen;
+
+                            FileOutputStream fileOut = new FileOutputStream(newFile);
+                            //send ack and prepare to read
+                            out.println(Protocol.ACK_TOKEN);
+                            //now read in file
+                            while ((buflen = inData.read(buf)) != -1) {
+                                System.out.println("*Writing*");
+                                fileOut.write(buf, 0, buflen);
+                                break;
+                            }
+                            System.out.println("Finished reading file " + newFile.getName());
+                            //send acknowledgement to controller
+                            outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());
+                            fileOut.close();
+                        } else {
+                            System.out.println("Nothing special with this line");
                         }
-                        System.out.println("Finished reading file " + newFile.getName());
-                        //send acknowledgement to controller
-                        outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());
-                        fileOut.close();
-                    }else{
-                        System.out.println("Nothing special with this line");
                     }
+                    System.out.println("Closing client");
+                    client.close();
+                } catch (Exception e) {
+                    System.err.println("error: " + e);
                 }
-                System.out.println("Closing client");
-                client.close();
-            } catch(Exception e) {
-                System.err.println("error: " + e);
             }
         }
 

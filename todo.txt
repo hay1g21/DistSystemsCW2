@@ -1,4 +1,17 @@
-1. Countdown latch for ACKs
-2. send port num to client
-3. send file info to datastore
-4. datastore to talk to client
+1. Countdown latch for ACKs - done
+2. send port num to client - done
+3. send file info to datastore - done
+4. datastore to talk to client - done
+----
+
+1. add index
+2. add way to track files and its state - vector
+3. add files to tracker and update states
+
+java Controller cport R timeout rebalance_period
+
+java Dstore port cport timeout file_folder
+
+java Client cport timeout
+
+java -cp client.jar:. ClientMain 12345 1000

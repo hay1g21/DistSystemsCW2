@@ -16,33 +16,37 @@ public class Controller {
     //Controller: java Controller cport R timeout rebalance_period
     static int count = 0;
 
+    static CountDownLatch latch;
     // Vector to store active clients
     static Vector<DataStoreThread> activeDataStores = new Vector<>(); //holds active threads of datastores
+
+    //stores list of files, not datastore related
+
+    static Vector<FileStateObject> fileList = new Vector<FileStateObject>();
+
     public static void main(String[] args) throws Exception{
 
         final int cport = Integer.parseInt(args[0]);
-        //int R = Integer.parseInt(args[1]);
+        int R = Integer.parseInt(args[1]);
         //int timeout = Integer.parseInt(args[2]);
         //int rebalance_period = Integer.parseInt(args[3]);
         //final int cport = 12345;
 
         //gives R as argument
-        int R = 1;
+        //int R = 1;
         int timeout = 1000;
         int rebalance_period = 100000;
 
         //for threads and acks
         CountDownLatch cd = new CountDownLatch(R);
-
+        latch = new CountDownLatch(R);
         //holds list of datastore ports to send to client
         ArrayList<Integer> dSPorts = new ArrayList<Integer>();
         System.out.println("Server started on port: " + cport);
         ServerSocket ss = null; //makes server socket
-
         //first wants datastores to join
         //at least R amount
         //add synchronisation
-        //AVOID MULTITHREADING FOR NOW
         try {
             ss = new ServerSocket(cport);
             while(true) {
@@ -72,12 +76,12 @@ public class Controller {
                             //add port num
                             dSPorts.add(portNum);
                             System.out.println("Num ports: " + dSPorts.size());
-                            new Thread(new DataStoreThread(dStore, cd)).start(); //allows multithreading of datastores
+                            new Thread(new DataStoreThread(dStore, R,latch)).start(); //allows multithreading of datastores
                             break;
                         }
                         else {
                             System.out.println("Client is joining");
-                            new Thread(new ClientThread(dStore,dSPorts,R, cd)).start(); //allows multithreading of datastores
+                            new Thread(new ClientThread(dStore,dSPorts,R, latch)).start(); //allows multithreading of datastores
                             break;
                         }
                     }
@@ -128,11 +132,12 @@ public class Controller {
 
     static class DataStoreThread implements Runnable{
         Socket dataStore;
-
+        int R;
         CountDownLatch latch;
-        DataStoreThread (Socket dataStore, CountDownLatch latch){
+        DataStoreThread (Socket dataStore, int R,CountDownLatch latch){
             this.dataStore = dataStore;
             this.latch = latch;
+            this.R = R;
         }
 
         public void run() {
@@ -171,6 +176,10 @@ public class Controller {
                         //countdown the latch
                         System.out.println("Message has been sent, decrement ack");
                         latch.countDown();
+                        System.out.println("Latch now " + latch.getCount());
+                        //reset latch
+                        Controller.latch = new CountDownLatch(R);
+                        latch = Controller.latch;
 
                     }else{
                         System.out.println("Nothing special with this line");
@@ -223,27 +232,72 @@ public class Controller {
                         String lines[] = line.split(" ");
                         String fileName = lines[1];
                         String size = lines[2];
-                        System.out.println("Preparing to store " + fileName + "of size " + size);
+                        System.out.println("Preparing to store " + fileName + " of size " + size);
                         //get R ports
                         String chosenPorts = "";
+
                         //if not enough datastores send error message
+                        if(listPorts.size() < R) {
+                            System.out.println("Not enough datastores");
+                            out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
+                        } else{
+                            Boolean exists = false;
+                            //if file already exists return error
+                            for(FileStateObject obj : fileList){
+                                if (obj.getFileName().equals(fileName)){
+                                    System.out.println("Already exists");
+                                    exists = true;
+                                }
+                            }
+                            if(exists){
+                                out.println(Protocol.ERROR_FILE_ALREADY_EXISTS_TOKEN);
+                            }else {
+
+
+                                //add file to index
+                                fileList.add(new FileStateObject(fileName, "store in progress"));
+                                for (int i = 0; i < R; i++) {
+                                    chosenPorts = chosenPorts + " " + listPorts.get(i);
+                                }
+                                //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                                out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+                                //now wait for acknowlegements
+                                System.out.println("Now waiting for countdown latch : value " + latch.getCount());
+
+                                latch.await();
+                                System.out.println("Latch complete");
+                                out.println(Protocol.STORE_COMPLETE_TOKEN);
+                                //find file and update state
+                                for (FileStateObject fileObject : Controller.fileList) {
+                                    if (fileObject.getFileName().equals(fileName)) {
+                                        //updatestate
+                                        System.out.println("Updating state of " + fileObject.getFileName() + " to complete");
+                                        fileObject.setState("store complete");
+                                        System.out.println("State of " + fileObject.getFileName() + " now " + fileObject.getState());
+                                    }
+                                }
+
+
+                                System.out.println("Finished");
+                                //reset countdown latch
+
+                                latch = Controller.latch;
+                                System.out.println("Value of latch: " + latch.getCount());
+                            }
+                        }
+                    }else if(line.contains("LIST")){
+                        System.out.println("Client wants a list of files: ");
                         if(listPorts.size() < R){
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
-                            break;
                         }else{
-                            for(int i = 0; i < R; i++){
-                                chosenPorts = chosenPorts + " " + listPorts.get(i);
+                            //get list of files from index
+                            String message = "";
+                            for(FileStateObject fileObject : fileList){
+                                message = message + " " + fileObject.getFileName();
                             }
-                            //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
-                            out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
-                            //now wait for acknowlegements
-                            System.out.println("Now waiting for countdown latch : value " + latch.getCount());
-
-                            latch.await();
-                            System.out.println("Latch complete");
-                            out.println(Protocol.STORE_COMPLETE_TOKEN);
-                            System.out.println("Finished");
+                            System.out.println("Sending" + message);
+                            out.println(Protocol.LIST_TOKEN + message);
                         }
                     }else{
                         System.out.println("Nothing special with this line");
