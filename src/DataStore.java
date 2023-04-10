@@ -162,6 +162,26 @@ public class DataStore {
                             //send acknowledgement to controller
                             outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());
                             fileOut.close();
+                        }else if(line.contains("LOAD_DATA")){
+                            System.out.println("Wants to load a file");
+                            String[] split = line.split(" ");
+                            System.out.println("Storing file: " + split[1]);
+
+                            File fileToLoad = new File(toStore + "/" + split[1]);
+                            if(fileToLoad.exists()){
+                                FileInputStream inp = new FileInputStream(fileToLoad);
+                                //time to write the file
+                                byte[] buf = new byte[1000];
+                                int buflen;
+                                while ((buflen = inp.read(buf)) != -1) {
+                                    System.out.println("*");
+                                    outData.write(buf, 0, buflen);
+                                }
+                                System.out.println("Finished writing");
+                                inp.close();
+                            }else{
+                                System.out.println("File does not exist");
+                            }
                         } else {
                             System.out.println("Nothing special with this line");
                         }

@@ -226,7 +226,7 @@ public class Controller {
                 //out.println("Acknowledged connection to client");
                 while((line = in.readLine()) != null){
                     System.out.println(line+" received, now choosing what to do");
-                    if(line.contains("STORE")){
+                    if(line.contains("STORE")) {
                         System.out.println("Client wants to store file: ");
                         //parse message
                         String lines[] = line.split(" ");
@@ -237,25 +237,25 @@ public class Controller {
                         String chosenPorts = "";
 
                         //if not enough datastores send error message
-                        if(listPorts.size() < R) {
+                        if (listPorts.size() < R) {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
-                        } else{
+                        } else {
                             Boolean exists = false;
                             //if file already exists return error
-                            for(FileStateObject obj : fileList){
-                                if (obj.getFileName().equals(fileName)){
+                            for (FileStateObject obj : fileList) {
+                                if (obj.getFileName().equals(fileName)) {
                                     System.out.println("Already exists");
                                     exists = true;
                                 }
                             }
-                            if(exists){
+                            if (exists) {
                                 out.println(Protocol.ERROR_FILE_ALREADY_EXISTS_TOKEN);
-                            }else {
+                            } else {
 
 
                                 //add file to index
-                                fileList.add(new FileStateObject(fileName, "store in progress"));
+                                fileList.add(new FileStateObject(fileName, Integer.parseInt(size),"store in progress"));
                                 for (int i = 0; i < R; i++) {
                                     chosenPorts = chosenPorts + " " + listPorts.get(i);
                                 }
@@ -285,6 +285,57 @@ public class Controller {
                                 System.out.println("Value of latch: " + latch.getCount());
                             }
                         }
+                    }else if(line.contains("LOAD")) {
+                        System.out.println("Client wants to load a file");
+                        //parse message
+                        String lines[] = line.split(" ");
+                        String fileName = lines[1];
+                        //prepare size
+                        int size = 0;
+                        System.out.println("Preparing to load " + fileName);
+                        //get R ports
+                        String chosenPorts = "";
+
+                        //if not enough datastores send error message
+                        if (listPorts.size() < R) {
+                            System.out.println("Not enough datastores");
+                            out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
+                        } else {
+                            //check if file exists
+                            Boolean exists = false;
+                            for (FileStateObject obj : fileList) {
+                                if (obj.getFileName().equals(fileName)) {
+                                    System.out.println("Exists");
+                                    size = obj.getFileSize();
+                                    exists = true;
+
+                                }
+                            }
+                            if (!exists) {
+                                out.println(Protocol.ERROR_FILE_DOES_NOT_EXIST_TOKEN);
+                            } else {
+                                System.out.println("Now picking datastore");
+                                //do one for now
+                                chosenPorts = chosenPorts + " " + listPorts.get(0);
+                                System.out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
+                                out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
+                            }
+                        }
+                    }else if(line.contains("REMOVE")){
+                        System.out.println("Client wants to remove files");
+                        String lines[] = line.split(" ");
+                        String fileName = lines[1];
+
+                        System.out.println("Preparing to remove " + fileName);
+
+                        for(FileStateObject obj : fileList){
+                            if(obj.getFileName().equals(fileName)){
+                                System.out.println("Setting state " + obj.getState() + " to remove");
+                                obj.setState("remove in progress");
+                            }
+                        }
+                        //gets datastores storing file
+
                     }else if(line.contains("LIST")){
                         System.out.println("Client wants a list of files: ");
                         if(listPorts.size() < R){
