@@ -95,7 +95,7 @@ public class ClientMain {
 				File fileList[] = uploadFolder.listFiles();
 				System.out.println(fileList[0].getName());
 				try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-
+				try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
 
 				System.out.println("Finished up store");
 
@@ -108,7 +108,7 @@ public class ClientMain {
 
 				System.out.println("Now trying a load on file 1");
 				try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
-
+				try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
 				while(true) {
 					try{
 

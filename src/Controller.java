@@ -255,9 +255,12 @@ public class Controller {
 
 
                                 //add file to index
-                                fileList.add(new FileStateObject(fileName, Integer.parseInt(size),"store in progress"));
+                                FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size),"store in progress");
+                                fileList.add(obj);
                                 for (int i = 0; i < R; i++) {
                                     chosenPorts = chosenPorts + " " + listPorts.get(i);
+                                    obj.addPort(listPorts.get(i));
+
                                 }
                                 //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                 out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
@@ -304,9 +307,10 @@ public class Controller {
                             //check if file exists
                             Boolean exists = false;
                             for (FileStateObject obj : fileList) {
-                                if (obj.getFileName().equals(fileName)) {
+                                if (obj.getFileName().equals(fileName) && !obj.getState().equals("store in progress")) {
                                     System.out.println("Exists");
                                     size = obj.getFileSize();
+                                    System.out.println("State = " + obj.getState());
                                     exists = true;
 
                                 }
@@ -320,6 +324,7 @@ public class Controller {
                                 System.out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
                                 out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
                             }
+
                         }
                     }else if(line.contains("REMOVE")){
                         System.out.println("Client wants to remove files");
