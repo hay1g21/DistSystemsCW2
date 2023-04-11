@@ -4,9 +4,16 @@
 4. datastore to talk to client - done
 ----
 
-1. add index
-2. add way to track files and its state - vector
-3. add files to tracker and update states
+1. add index - done
+2. add way to track files and its state - vector - done
+3. add files to tracker and update states - done
+
+--
+
+1. add reload function, countdown and remove files inavailable ports
+2. add remove operation
+3. add new countdown latch for remove operation
+4. store list of datastores for controller in index
 
 java Controller cport R timeout rebalance_period
 

@@ -17,6 +17,7 @@ public class Controller {
     static int count = 0;
 
     static CountDownLatch latch;
+    static CountDownLatch removeLatch;
     // Vector to store active clients
     static Vector<DataStoreThread> activeDataStores = new Vector<>(); //holds active threads of datastores
 
@@ -38,8 +39,10 @@ public class Controller {
         int rebalance_period = 100000;
 
         //for threads and acks
-        CountDownLatch cd = new CountDownLatch(R);
+        //CountDownLatch cd = new CountDownLatch(R);
+
         latch = new CountDownLatch(R);
+        removeLatch = new CountDownLatch(R);
         //holds list of datastore ports to send to client
         ArrayList<Integer> dSPorts = new ArrayList<Integer>();
         System.out.println("Server started on port: " + cport);
@@ -177,10 +180,37 @@ public class Controller {
                         System.out.println("Message has been sent, decrement ack");
                         latch.countDown();
                         System.out.println("Latch now " + latch.getCount());
+                        String filename = line.split(" ")[1];
                         //reset latch
+                        //fileList.get(0).addPort(dataStore.getPort());
+                        //add port to fileobject
+                        for(FileStateObject obj : fileList){
+                            if(obj.getFileName().equals(filename)){
+                                obj.addSocket(dataStore);
+                            }
+                        }
                         Controller.latch = new CountDownLatch(R);
                         latch = Controller.latch;
 
+                    }else if (line.contains("REMOVE_ACK")){
+                    //countdown the latch
+                    System.out.println("Message has been sent, decrement remove ack");
+                    removeLatch.countDown();
+                    System.out.println("Latch now " + latch.getCount());
+                    String filename = line.split(" ")[1];
+
+                    //fileList.get(0).addPort(dataStore.getPort());
+                    //remove port from fileobject
+                        /*
+                    for(FileStateObject obj : fileList){
+                        if(obj.getFileName().equals(filename)){
+                            obj.addSocket(dataStore);
+                        }
+                    }
+
+                         */
+                    Controller.removeLatch = new CountDownLatch(R);
+                    System.out.println("*Decrement complete*");
                     }else{
                         System.out.println("Nothing special with this line");
                     }
@@ -281,7 +311,9 @@ public class Controller {
                                 }
 
 
-                                System.out.println("Finished");
+                                //PrintWriter outC = new PrintWriter(obj.getSockets().get(0).getOutputStream(), true); //prints to datastore, replies
+                                //outC.println("Hello data store its me after a store");
+                                //System.out.println("Finished");
                                 //reset countdown latch
 
                                 latch = Controller.latch;
@@ -304,13 +336,15 @@ public class Controller {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
                         } else {
-                            //check if file exists
+                            //check if file exists also prepare fileobject
+                            FileStateObject fileObj = null;
                             Boolean exists = false;
                             for (FileStateObject obj : fileList) {
                                 if (obj.getFileName().equals(fileName) && !obj.getState().equals("store in progress")) {
                                     System.out.println("Exists");
                                     size = obj.getFileSize();
                                     System.out.println("State = " + obj.getState());
+                                    fileObj = obj;
                                     exists = true;
 
                                 }
@@ -320,27 +354,60 @@ public class Controller {
                             } else {
                                 System.out.println("Now picking datastore");
                                 //do one for now
-                                chosenPorts = chosenPorts + " " + listPorts.get(0);
+                                //get list of ports that store the datastore
+                                Vector<Integer> availablePorts = fileObj.getPorts();
+                                chosenPorts = chosenPorts + " " + availablePorts.get(0);
                                 System.out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
                                 out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
                             }
 
                         }
+                    }else if(line.contains("RELOAD")){
+                        System.out.println("Client wants to reload files");
+
                     }else if(line.contains("REMOVE")){
                         System.out.println("Client wants to remove files");
                         String lines[] = line.split(" ");
                         String fileName = lines[1];
 
                         System.out.println("Preparing to remove " + fileName);
-
+                        Vector<Socket> removePorts = null;
+                        FileStateObject fileObj = null;
+                        Boolean exists = false;
                         for(FileStateObject obj : fileList){
                             if(obj.getFileName().equals(fileName)){
                                 System.out.println("Setting state " + obj.getState() + " to remove");
                                 obj.setState("remove in progress");
+                                exists = true;
+                                removePorts = obj.getSockets(); //gets list of ports holding the file
+                                fileObj = obj;
                             }
                         }
-                        //gets datastores storing file
 
+                        //gets datastores storing file
+                        for(Socket dataStore : removePorts){
+                            PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
+                            //send remove messgae
+
+                            outC.println(Protocol.REMOVE_TOKEN + " " + fileObj.getFileName());
+                        }
+                        //wait for acks
+                        System.out.println("Now waiting for countdown latch : value " + latch.getCount());
+
+                        removeLatch.await();
+
+                        System.out.println("Remove Latch complete");
+                        out.println(Protocol.REMOVE_COMPLETE_TOKEN);
+                        //find file and update state
+                        for (FileStateObject fileObject : Controller.fileList) {
+                            if (fileObject.getFileName().equals(fileName)) {
+                                //updatestate
+                                System.out.println("Updating state of " + fileObject.getFileName() + " to removed");
+                                fileObject.setState("remove complete");
+                                System.out.println("State of " + fileObject.getFileName() + " now " + fileObject.getState());
+                            }
+                        }
+                        System.out.println("Remove finished");
                     }else if(line.contains("LIST")){
                         System.out.println("Client wants a list of files: ");
                         if(listPorts.size() < R){

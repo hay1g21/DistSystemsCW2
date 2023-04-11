@@ -1,4 +1,5 @@
 import java.io.File;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -8,6 +9,8 @@ public class FileStateObject {
     String state;
 
     Vector<Integer> ports = new Vector<Integer>();
+
+    Vector<Socket> sockets = new Vector<>();
     //takes a file and a state of it
     FileStateObject(String fileName, int fileSize, String state){
         this.fileName = fileName;
@@ -44,11 +47,30 @@ public class FileStateObject {
         ports.add(port);
     }
 
-    public String getPorts(){
+    public Vector<Integer> getPorts(){
+        /*
         String line = "";
         for(int port: ports){
             line = " " + port;
         }
-        return line;
+
+         */
+        return ports;
+    }
+    //add socket of datastore that holds the file
+    public void addSocket(Socket socket){
+
+        sockets.add(socket);
+    }
+
+    public Vector<Socket> getSockets(){
+        /*
+        String line = "";
+        for(int port: ports){
+            line = " " + port;
+        }
+
+         */
+        return sockets;
     }
 }
