@@ -25,18 +25,18 @@ public class Controller {
 
     static Vector<FileStateObject> fileList = new Vector<FileStateObject>();
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
 
         final int cport = Integer.parseInt(args[0]);
         int R = Integer.parseInt(args[1]);
-        //int timeout = Integer.parseInt(args[2]);
-        //int rebalance_period = Integer.parseInt(args[3]);
+        int timeout = Integer.parseInt(args[2]);
+        int rebalance_period = Integer.parseInt(args[3]);
         //final int cport = 12345;
 
         //gives R as argument
         //int R = 1;
-        int timeout = 1000;
-        int rebalance_period = 100000;
+        //int timeout = 1000;
+        //int rebalance_period = 100000;
 
         //for threads and acks
         //CountDownLatch cd = new CountDownLatch(R);
@@ -52,11 +52,11 @@ public class Controller {
         //add synchronisation
         try {
             ss = new ServerSocket(cport);
-            while(true) {
+            while (true) {
                 try {
                     System.out.println("Back to accepting connections: Current connections " + count);
                     Socket dStore = ss.accept(); //accepts a datastore socket
-                    if(dStore != null){
+                    if (dStore != null) {
                         System.out.println("Connection accepted: " + dStore);
                     }
 
@@ -68,7 +68,7 @@ public class Controller {
                     OutputStream outData = dStore.getOutputStream(); //sends
 
                     String line;
-                    while((line = in.readLine()) != null) {
+                    while ((line = in.readLine()) != null) {
                         System.out.println(line + " received");
                         if (line.contains("JOIN")) {
                             count++;
@@ -79,12 +79,11 @@ public class Controller {
                             //add port num
                             dSPorts.add(portNum);
                             System.out.println("Num ports: " + dSPorts.size());
-                            new Thread(new DataStoreThread(dStore, R,latch)).start(); //allows multithreading of datastores
+                            new Thread(new DataStoreThread(dStore, R, latch)).start(); //allows multithreading of datastores
                             break;
-                        }
-                        else {
+                        } else {
                             System.out.println("Client is joining");
-                            new Thread(new ClientThread(dStore,dSPorts,R, latch)).start(); //allows multithreading of datastores
+                            new Thread(new ClientThread(dStore, dSPorts, R, latch)).start(); //allows multithreading of datastores
                             break;
                         }
                     }
@@ -118,26 +117,32 @@ public class Controller {
                     dStore.close();
 
                     */
-                } catch(Exception e) { System.err.println("error: " + e); }
+                } catch (Exception e) {
+                    System.err.println("error: " + e);
+                }
             }
-        } catch(Exception e) { System.err.println("error: " + e);
+        } catch (Exception e) {
+            System.err.println("error: " + e);
         } finally {
             if (ss != null)
                 try {
                     ss.close();
 
-                } catch (IOException e) { System.err.println("error: " + e); }
+                } catch (IOException e) {
+                    System.err.println("error: " + e);
+                }
         }
 
 
     }
     //**avoid until ready
 
-    static class DataStoreThread implements Runnable{
+    static class DataStoreThread implements Runnable {
         Socket dataStore;
         int R;
         CountDownLatch latch;
-        DataStoreThread (Socket dataStore, int R,CountDownLatch latch){
+
+        DataStoreThread(Socket dataStore, int R, CountDownLatch latch) {
             this.dataStore = dataStore;
             this.latch = latch;
             this.R = R;
@@ -147,7 +152,7 @@ public class Controller {
             receiveMessage();
         }
 
-        public void receiveMessage(){
+        public void receiveMessage() {
             try {
                 //Textual messages
                 BufferedReader in = new BufferedReader(new InputStreamReader(dataStore.getInputStream())); //listens from port
@@ -158,9 +163,9 @@ public class Controller {
                 String line;
 
                 out.println("Acknowledged connection");
-                while((line = in.readLine()) != null){
-                    System.out.println(line+" received, now choosing what to do");
-                    if(line.equals("SEND")) {
+                while ((line = in.readLine()) != null) {
+                    System.out.println(line + " received, now choosing what to do");
+                    if (line.equals("SEND")) {
                         System.out.println("Sending");
                         //send file logic
                         //out.println("Hello datastore I'm sending a file");
@@ -175,7 +180,7 @@ public class Controller {
                         }
                         System.out.println("Finished reading");
                         inp.close();
-                    }else if (line.contains("STORE_ACK")){
+                    } else if (line.contains("STORE_ACK")) {
                         //countdown the latch
                         System.out.println("Message has been sent, decrement ack");
                         latch.countDown();
@@ -184,23 +189,23 @@ public class Controller {
                         //reset latch
                         //fileList.get(0).addPort(dataStore.getPort());
                         //add port to fileobject
-                        for(FileStateObject obj : fileList){
-                            if(obj.getFileName().equals(filename)){
+                        for (FileStateObject obj : fileList) {
+                            if (obj.getFileName().equals(filename)) {
                                 obj.addSocket(dataStore);
                             }
                         }
                         Controller.latch = new CountDownLatch(R);
                         latch = Controller.latch;
 
-                    }else if (line.contains("REMOVE_ACK")){
-                    //countdown the latch
-                    System.out.println("Message has been sent, decrement remove ack");
-                    removeLatch.countDown();
-                    System.out.println("Latch now " + latch.getCount());
-                    String filename = line.split(" ")[1];
+                    } else if (line.contains("REMOVE_ACK")) {
+                        //countdown the latch
+                        System.out.println("Message has been sent, decrement remove ack");
+                        removeLatch.countDown();
+                        System.out.println("Latch now " + latch.getCount());
+                        String filename = line.split(" ")[1];
 
-                    //fileList.get(0).addPort(dataStore.getPort());
-                    //remove port from fileobject
+                        //fileList.get(0).addPort(dataStore.getPort());
+                        //remove port from fileobject
                         /*
                     for(FileStateObject obj : fileList){
                         if(obj.getFileName().equals(filename)){
@@ -209,29 +214,30 @@ public class Controller {
                     }
 
                          */
-                    Controller.removeLatch = new CountDownLatch(R);
-                    System.out.println("*Decrement complete*");
-                    }else{
+                        Controller.removeLatch = new CountDownLatch(R);
+                        System.out.println("*Decrement complete*");
+                    } else {
                         System.out.println("Nothing special with this line");
                     }
                 }
                 System.out.println("Datastore close");
                 dataStore.close();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 System.err.println("error: " + e);
             }
         }
 
     }
 
-    static class ClientThread implements Runnable{
+    static class ClientThread implements Runnable {
         Socket client;
         ArrayList<Integer> listPorts;
 
         int R;
 
         CountDownLatch latch;
-        ClientThread (Socket client, ArrayList<Integer> listPorts, int R, CountDownLatch latch){
+
+        ClientThread(Socket client, ArrayList<Integer> listPorts, int R, CountDownLatch latch) {
             this.client = client;
             this.listPorts = listPorts;
             this.R = R;
@@ -243,7 +249,7 @@ public class Controller {
             receiveMessage();
         }
 
-        public void receiveMessage(){
+        public void receiveMessage() {
             try {
                 //Textual messages
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
@@ -254,9 +260,9 @@ public class Controller {
                 String line;
 
                 //out.println("Acknowledged connection to client");
-                while((line = in.readLine()) != null){
-                    System.out.println(line+" received, now choosing what to do");
-                    if(line.contains("STORE")) {
+                while ((line = in.readLine()) != null) {
+                    System.out.println(line + " received, now choosing what to do");
+                    if (line.contains("STORE")) {
                         System.out.println("Client wants to store file: ");
                         //parse message
                         String lines[] = line.split(" ");
@@ -285,7 +291,7 @@ public class Controller {
 
 
                                 //add file to index
-                                FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size),"store in progress");
+                                FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size), "store in progress");
                                 fileList.add(obj);
                                 for (int i = 0; i < R; i++) {
                                     chosenPorts = chosenPorts + " " + listPorts.get(i);
@@ -320,7 +326,7 @@ public class Controller {
                                 System.out.println("Value of latch: " + latch.getCount());
                             }
                         }
-                    }else if(line.contains("LOAD")) {
+                    } else if (line.contains("LOAD")) {
                         System.out.println("Client wants to load a file");
                         //parse message
                         String lines[] = line.split(" ");
@@ -362,10 +368,10 @@ public class Controller {
                             }
 
                         }
-                    }else if(line.contains("RELOAD")){
+                    } else if (line.contains("RELOAD")) {
                         System.out.println("Client wants to reload files");
 
-                    }else if(line.contains("REMOVE")){
+                    } else if (line.contains("REMOVE")) {
                         System.out.println("Client wants to remove files");
                         String lines[] = line.split(" ");
                         String fileName = lines[1];
@@ -374,8 +380,8 @@ public class Controller {
                         Vector<Socket> removePorts = null;
                         FileStateObject fileObj = null;
                         Boolean exists = false;
-                        for(FileStateObject obj : fileList){
-                            if(obj.getFileName().equals(fileName)){
+                        for (FileStateObject obj : fileList) {
+                            if (obj.getFileName().equals(fileName)) {
                                 System.out.println("Setting state " + obj.getState() + " to remove");
                                 obj.setState("remove in progress");
                                 exists = true;
@@ -385,7 +391,7 @@ public class Controller {
                         }
 
                         //gets datastores storing file
-                        for(Socket dataStore : removePorts){
+                        for (Socket dataStore : removePorts) {
                             PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
                             //send remove messgae
 
@@ -408,27 +414,27 @@ public class Controller {
                             }
                         }
                         System.out.println("Remove finished");
-                    }else if(line.contains("LIST")){
+                    } else if (line.contains("LIST")) {
                         System.out.println("Client wants a list of files: ");
-                        if(listPorts.size() < R){
+                        if (listPorts.size() < R) {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
-                        }else{
+                        } else {
                             //get list of files from index
                             String message = "";
-                            for(FileStateObject fileObject : fileList){
+                            for (FileStateObject fileObject : fileList) {
                                 message = message + " " + fileObject.getFileName();
                             }
                             System.out.println("Sending" + message);
                             out.println(Protocol.LIST_TOKEN + message);
                         }
-                    }else{
+                    } else {
                         System.out.println("Nothing special with this line");
                     }
                 }
                 System.out.println("Closing client");
                 client.close();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 System.err.println("error: " + e);
             }
         }

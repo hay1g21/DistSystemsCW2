@@ -18,11 +18,11 @@ public class DataStore {
         //datastores should use different ports
 
         int port = Integer.parseInt(args[0]);
-        //int cport = Integer.parseInt(args[1]);
-        //int timeout = Integer.parseInt(args[2]);
+        int cport = Integer.parseInt(args[1]);
+        int timeout = Integer.parseInt(args[2]);
         String file_folder = args[3];
-        int cport = 12345;
-        int timeout = 1000; //ms
+        //int cport = 12345;
+        //int timeout = 1000; //ms
         //String file_folder = "to_store";
 
         //makes a directory

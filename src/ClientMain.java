@@ -3,29 +3,30 @@ import java.io.IOException;
 import java.util.Random;
 
 /**
- *  This is just an example of how to use the provided client library. You are expected to customise this class and/or 
- *  develop other client classes to test your Controller and Dstores thoroughly. You are not expected to include client 
- *  code in your submission.
+ * This is just an example of how to use the provided client library. You are expected to customise this class and/or
+ * develop other client classes to test your Controller and Dstores thoroughly. You are not expected to include client
+ * code in your submission.
  */
 public class ClientMain {
-	//A client: java Client cport timeout
-	public static void main(String[] args) throws Exception{
-		
-		final int cport = Integer.parseInt(args[0]);
-		int timeout = Integer.parseInt(args[1]);
-		
-		// this client expects a 'downloads' folder in the current directory; all files loaded from the store will be stored in this folder
-		File downloadFolder = new File("downloads");
-		if (!downloadFolder.exists())
-			if (!downloadFolder.mkdir()) throw new RuntimeException("Cannot create download folder (folder absolute path: " + downloadFolder.getAbsolutePath() + ")");
-		
-		// this client expects a 'to_store' folder in the current directory; all files to be stored in the store will be collected from this folder
-		File uploadFolder = new File("clientto_store");
-		if (!uploadFolder.exists())
-			throw new RuntimeException("clientto_store folder does not exist");
-		
-		// launch a single client
-		testClient(cport, timeout, downloadFolder, uploadFolder);
+    //A client: java Client cport timeout
+    public static void main(String[] args) throws Exception {
+
+        final int cport = Integer.parseInt(args[0]);
+        int timeout = Integer.parseInt(args[1]);
+
+        // this client expects a 'downloads' folder in the current directory; all files loaded from the store will be stored in this folder
+        File downloadFolder = new File("downloads");
+        if (!downloadFolder.exists())
+            if (!downloadFolder.mkdir())
+                throw new RuntimeException("Cannot create download folder (folder absolute path: " + downloadFolder.getAbsolutePath() + ")");
+
+        // this client expects a 'to_store' folder in the current directory; all files to be stored in the store will be collected from this folder
+        File uploadFolder = new File("clientto_store");
+        if (!uploadFolder.exists())
+            throw new RuntimeException("clientto_store folder does not exist");
+
+        // launch a single client
+        testClient(cport, timeout, downloadFolder, uploadFolder);
 
 		/*
 		// launch a number of concurrent clients, each doing the same operations
@@ -38,88 +39,112 @@ public class ClientMain {
 		}
 
 		 */
-	}
-	
-	public static void test2Client(int cport, int timeout, File downloadFolder, File uploadFolder) {
-		Client client = null;
-		
-		try {
-			client = new Client(cport, timeout, Logger.LoggingType.ON_FILE_AND_TERMINAL);
-			client.connect();
-			Random random = new Random(System.currentTimeMillis() * System.nanoTime());
-			
-			File fileList[] = uploadFolder.listFiles();
-			for (int i=0; i<fileList.length/2; i++) {
-				File fileToStore = fileList[random.nextInt(fileList.length)];
-				try {					
-					client.store(fileToStore);
-				} catch (Exception e) {
-					System.out.println("Error storing file " + fileToStore);
-					e.printStackTrace();
-				}
-			}
-			
-			String list[] = null;
-			try { list = list(client); } catch(IOException e) { e.printStackTrace(); }
-			
-			for (int i = 0; i < list.length/4; i++) {
-				String fileToRemove = list[random.nextInt(list.length)];
-				try {
-					client.remove(fileToRemove);
-				} catch (Exception e) {
-					System.out.println("Error remove file " + fileToRemove);
-					e.printStackTrace();
-				}
-			}
-			
-			try { list = list(client); } catch(IOException e) { e.printStackTrace(); }
-			
-		} catch(IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (client != null)
-				try { client.disconnect(); } catch(Exception e) { e.printStackTrace(); }
-		}
-	}
-	
-	public static void testClient(int cport, int timeout, File downloadFolder, File uploadFolder) {
-		Client client = null;
-		
-		try {
-			
-			client = new Client(cport, timeout, Logger.LoggingType.ON_FILE_AND_TERMINAL);
-		
-			try {
-				client.connect();
-				client.send("Client I'm a client");
-				File fileList[] = uploadFolder.listFiles();
-				System.out.println(fileList[0].getName());
-				try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-				//try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+    }
 
-				System.out.println("Finished up store");
+    public static void test2Client(int cport, int timeout, File downloadFolder, File uploadFolder) {
+        Client client = null;
 
-				System.out.println("Now trying to remove file");
-				try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
-				//try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-				//System.out.println("Finished up send agian store");
+        try {
+            client = new Client(cport, timeout, Logger.LoggingType.ON_FILE_AND_TERMINAL);
+            client.connect();
+            Random random = new Random(System.currentTimeMillis() * System.nanoTime());
 
-				//now list
-				//client.list();
+            File fileList[] = uploadFolder.listFiles();
+            for (int i = 0; i < fileList.length / 2; i++) {
+                File fileToStore = fileList[random.nextInt(fileList.length)];
+                try {
+                    client.store(fileToStore);
+                } catch (Exception e) {
+                    System.out.println("Error storing file " + fileToStore);
+                    e.printStackTrace();
+                }
+            }
 
-				System.out.println("Now trying a load on file 1");
-				//try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
-				//try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
-				while(true) {
-					try{
+            String list[] = null;
+            try {
+                list = list(client);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-					}catch (Exception e){
-						e.printStackTrace();
-					}
+            for (int i = 0; i < list.length / 4; i++) {
+                String fileToRemove = list[random.nextInt(list.length)];
+                try {
+                    client.remove(fileToRemove);
+                } catch (Exception e) {
+                    System.out.println("Error remove file " + fileToRemove);
+                    e.printStackTrace();
+                }
+            }
 
-				}
+            try {
+                list = list(client);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-			} catch(IOException e) { e.printStackTrace(); return; }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (client != null)
+                try {
+                    client.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+
+    public static void testClient(int cport, int timeout, File downloadFolder, File uploadFolder) {
+        Client client = null;
+
+        try {
+
+            client = new Client(cport, timeout, Logger.LoggingType.ON_FILE_AND_TERMINAL);
+
+            try {
+                client.connect();
+                client.send("Client I'm a client");
+                File fileList[] = uploadFolder.listFiles();
+                System.out.println(fileList[0].getName());
+                try {
+                    client.store(fileList[0]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+
+                System.out.println("Finished up store");
+
+                System.out.println("Now trying to remove file");
+                try {
+                    client.remove(fileList[1].getName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //System.out.println("Finished up send agian store");
+
+                //now list
+                //client.list();
+
+                System.out.println("Now trying a load on file 1");
+                //try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                System.out.println("Finished");
+                while (true) {
+                    try {
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
 
 
 			/*
@@ -152,22 +177,26 @@ public class ClientMain {
 
 			 */
 
-		} finally {
-			if (client != null)
-				try { client.disconnect(); } catch(Exception e) { e.printStackTrace(); }
-		}
-	}
+        } finally {
+            if (client != null)
+                try {
+                    client.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+        }
+    }
 
-	public static String[] list(Client client) throws IOException, NotEnoughDstoresException {
-		System.out.println("Retrieving list of files...");
-		String list[] = client.list();
-		
-		System.out.println("Ok, " + list.length + " files:");
-		int i = 0; 
-		for (String filename : list)
-			System.out.println("[" + i++ + "] " + filename);
-		
-		return list;
-	}
-	
+    public static String[] list(Client client) throws IOException, NotEnoughDstoresException {
+        System.out.println("Retrieving list of files...");
+        String list[] = client.list();
+
+        System.out.println("Ok, " + list.length + " files:");
+        int i = 0;
+        for (String filename : list)
+            System.out.println("[" + i++ + "] " + filename);
+
+        return list;
+    }
+
 }

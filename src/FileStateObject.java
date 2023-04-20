@@ -11,8 +11,9 @@ public class FileStateObject {
     Vector<Integer> ports = new Vector<Integer>();
 
     Vector<Socket> sockets = new Vector<>();
+
     //takes a file and a state of it
-    FileStateObject(String fileName, int fileSize, String state){
+    FileStateObject(String fileName, int fileSize, String state) {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.state = state;
@@ -42,12 +43,12 @@ public class FileStateObject {
         this.state = state;
     }
 
-    public void addPort(int port){
+    public void addPort(int port) {
         //add port to list that stores the file
         ports.add(port);
     }
 
-    public Vector<Integer> getPorts(){
+    public Vector<Integer> getPorts() {
         /*
         String line = "";
         for(int port: ports){
@@ -57,13 +58,14 @@ public class FileStateObject {
          */
         return ports;
     }
+
     //add socket of datastore that holds the file
-    public void addSocket(Socket socket){
+    public void addSocket(Socket socket) {
 
         sockets.add(socket);
     }
 
-    public Vector<Socket> getSockets(){
+    public Vector<Socket> getSockets() {
         /*
         String line = "";
         for(int port: ports){
