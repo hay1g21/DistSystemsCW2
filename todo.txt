@@ -11,13 +11,13 @@
 --
 
 1. add reload function, countdown and remove files inavailable ports
-2. add remove operation
+2. add remove operation -done
 3. add new countdown latch for remove operation -done
 4. store list of datastores for controller in index -done
 
 
 --
-1. put datastore listener and client listener into one thread
+1. put datastore listener and client listener into one thread - done
 2. add timeouts
 java Controller cport R timeout rebalance_period
 

@@ -115,20 +115,23 @@ public class ClientMain {
                 try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
 
                 System.out.println("Finished up store");
-
+                client.list();
                 System.out.println("Now trying to remove file");
+
                 try {
                     client.remove(fileList[1].getName());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
                 //System.out.println("Finished up send agian store");
 
                 //now list
-                //client.list();
+                client.list();
 
-                System.out.println("Now trying a load on file 1");
+                //System.out.println("Now trying a load on file 1");
                 //try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 System.out.println("Finished");
