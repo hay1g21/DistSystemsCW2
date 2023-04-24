@@ -118,11 +118,14 @@ public class ClientMain {
                 client.list();
                 System.out.println("Now trying to remove file");
 
+                /*
                 try {
                     client.remove(fileList[1].getName());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                 */
 
                 try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
