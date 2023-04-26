@@ -18,7 +18,7 @@
 
 --
 1. put datastore listener and client listener into one thread - done
-2. add timeouts
+2. add timeouts -done
 java Controller cport R timeout rebalance_period
 
 java Dstore port cport timeout file_folder

@@ -1,9 +1,7 @@
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 
-public class DataStore {
+public class Dstore {
     //listen on different ports, establish connection as soon as they start
 
     //A Dstore: java Dstore port cport timeout file_folder
@@ -30,7 +28,12 @@ public class DataStore {
         if (!uploadFolder.exists())
             if (!uploadFolder.mkdir()) throw new RuntimeException("Cannot create download folder (folder absolute path: " + uploadFolder.getAbsolutePath() + ")");
 
-
+        //also should empty folder
+        for(File file: uploadFolder.listFiles()) {
+            if (!file.isDirectory()) {
+                file.delete();
+            }
+        }
         Socket controllerSocket = null;
         ServerSocket dSSocket = null;
 
@@ -160,7 +163,7 @@ public class DataStore {
                             fileOut.write(buf, 0, buflen);
                             break;
                         }
-                        System.out.println("Finished reading file " + newFile.getName());
+                        System.out.println("Finished reading file " + newFile.getName() + ", sending ack");
                         //send acknowledgement to controller
                         outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());
                         fileOut.close();
@@ -234,9 +237,15 @@ public class DataStore {
                                 System.out.println("File exists, now removing file");
                                 filetoRemove.delete();
                                 System.out.println("File removed");
+
+                                //tell controller
+                                System.out.println("Sending Remove ACK to controller");
+                                out.println(Protocol.REMOVE_ACK_TOKEN + " " + filetoRemove.getName());
+                            }else{
+                                System.out.println("Sending file does not exist to controller because couldnt find file");
+                                out.println(Protocol.ERROR_FILE_DOES_NOT_EXIST_TOKEN);
                             }
-                            //tell controller
-                            out.println(Protocol.REMOVE_ACK_TOKEN + " " + filetoRemove.getName());
+
 
                         }
                     }

@@ -104,9 +104,12 @@ public class ClientMain {
 
             try {
                 client.connect();
-                client.send("Client I'm a client");
+                //client.send("Client I'm a client");
                 File fileList[] = uploadFolder.listFiles();
                 System.out.println(fileList[0].getName());
+                System.out.println(fileList[1].getName());
+                //System.out.println(fileList[2].getName());
+                /*
                 try {
                     client.store(fileList[0]);
                 } catch (IOException e) {
@@ -114,28 +117,28 @@ public class ClientMain {
                 }
                 try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
 
+
+                 */
                 System.out.println("Finished up store");
                 client.list();
                 System.out.println("Now trying to remove file");
 
-                /*
-                try {
-                    client.remove(fileList[1].getName());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
 
-                 */
+                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
 
-                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.remove("yukari"); } catch(IOException e) { e.printStackTrace(); }
+
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
                 //System.out.println("Finished up send agian store");
 
                 //now list
-                client.list();
+                //client.list();
 
-                //System.out.println("Now trying a load on file 1");
-                //try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                System.out.println("Now trying a load on file 1");
+                try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 System.out.println("Finished");
                 while (true) {
