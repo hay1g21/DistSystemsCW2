@@ -109,41 +109,25 @@ public class ClientMain {
                 System.out.println(fileList[0].getName());
                 System.out.println(fileList[1].getName());
                 //System.out.println(fileList[2].getName());
-                /*
-                try {
-                    client.store(fileList[0]);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
 
-
-                 */
-                System.out.println("Finished up store");
-                client.list();
-                System.out.println("Now trying to remove file");
-
-                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
 
                 //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
 
-                //try { client.remove("yukari"); } catch(IOException e) { e.printStackTrace(); }
-
-                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-                //try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
-                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-                //System.out.println("Finished up send agian store");
-
-                //now list
                 //client.list();
 
-                System.out.println("Now trying a load on file 1");
-                try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
-                //try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.wrongStore(fileList[0].getName(), new byte[52]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.wrongLoad(fileList[0].getName(), 1); } catch(IOException e) { e.printStackTrace(); }
+
+
+                //put code here
+                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 System.out.println("Finished");
                 while (true) {
                     try {
-
+                            Thread.sleep(1000);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

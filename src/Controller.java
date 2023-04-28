@@ -18,7 +18,7 @@ public class Controller {
     // Vector to store active clients
     static Vector<DataStoreThread> activeDataStores = new Vector<>(); //holds active threads of datastores
 
-    static ArrayList<Integer> dSPorts = new ArrayList<Integer>();
+    static Vector<Integer> dSPorts = new Vector<Integer>();
     //stores list of files, not datastore related
 
     static Vector<FileStateObject> fileList = new Vector<FileStateObject>();
@@ -58,7 +58,7 @@ public class Controller {
                         System.out.println("Connection accepted: " + dStore);
                         System.out.println("Making new thread");
                         count++;
-                        new Thread(new ReceiverThread(dStore, dSPorts,R)).start(); //allows multithreading of datastores
+                        new Thread(new ReceiverThread(dStore,R)).start(); //allows multithreading of datastores
                     }
                     /*
                     //Textual messages
@@ -447,15 +447,14 @@ public class Controller {
 
     static class ReceiverThread implements Runnable {
         Socket client;
-        ArrayList<Integer> listPorts;
+
 
         int R;
 
         Integer previousPort; //for reloading
         Vector<Integer> triedPorts;
-        ReceiverThread(Socket client, ArrayList<Integer> listPorts, int R) {
+        ReceiverThread(Socket client, int R) {
             this.client = client;
-            this.listPorts = listPorts;
             this.R = R;
             //listPorts.add(134);
             previousPort = 0;
@@ -488,8 +487,8 @@ public class Controller {
                         int portNum = Integer.parseInt(line.split(" ")[1]);
                         System.out.println("Port num: " + portNum);
                         //add port num
-                        listPorts.add(portNum);
-                        System.out.println("Num ports: " + listPorts.size());
+                        dSPorts.add(portNum);
+                        System.out.println("Num ports: " + dSPorts.size());
                         listAvailablePorts();
 
                     }
@@ -521,7 +520,7 @@ public class Controller {
                         String chosenPorts = "";
 
                         //if not enough datastores send error message
-                        if (listPorts.size() < R) {
+                        if (dSPorts.size() < R) {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
                         } else {
@@ -537,7 +536,6 @@ public class Controller {
                                 out.println(Protocol.ERROR_FILE_ALREADY_EXISTS_TOKEN);
                             } else {
 
-
                                 //add file to index
                                 FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size), "store in progress");
                                 fileList.add(obj);
@@ -546,10 +544,10 @@ public class Controller {
                                 for (int i = 0; i < R; i++) {
                                     //int chosen = random.nextInt(1, listPorts.size());
                                     //System.out.println(listPorts.size());
-                                    System.out.println("Adding to port " + listPorts.get(i));
-                                    chosenPorts = chosenPorts + " " + listPorts.get(i);
+                                    System.out.println("Adding to port " + dSPorts.get(i));
+                                    chosenPorts = chosenPorts + " " + dSPorts.get(i);
 
-                                    obj.addPort(listPorts.get(i));
+                                    obj.addPort(dSPorts.get(i));
 
                                 }
                                 //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
@@ -605,7 +603,7 @@ public class Controller {
                         //get R ports
                         String chosenPorts = "";
                         //if not enough datastores send error message
-                        if (listPorts.size() < R) {
+                        if (dSPorts.size() < R) {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
                         } else {
@@ -652,7 +650,7 @@ public class Controller {
                         //get R ports
                         String chosenPorts = "";
                         //remove port from tried ports
-                        System.out.println("Size of listports " + listPorts.size());
+                        System.out.println("Size of listports " + dSPorts.size());
                         if(triedPorts.size() > 0){
                             System.out.println("REMOVING");
                             System.out.println("Tried ports : " + triedPorts.get(0));
@@ -768,7 +766,7 @@ public class Controller {
                         System.out.println("Remove finished");
                     } else if (line.contains("LIST")) {
                         System.out.println("Client wants a list of files: ");
-                        if (listPorts.size() < R) {
+                        if (dSPorts.size() < R) {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
                         } else {
@@ -787,7 +785,7 @@ public class Controller {
                         System.out.println("Nothing special with this line");
                     }
                 }
-                System.out.println("Closing client");
+                System.out.println("Closing client: " + client.getPort());
                 client.close();
             } catch (Exception e) {
                 System.err.println("error: " + e);
@@ -795,10 +793,13 @@ public class Controller {
         }
 
         public void listAvailablePorts(){
-            System.out.println("Ports: ");
-            for(int port : listPorts){
+            System.out.println();
+            System.out.print("Ports: ");
+            for(int port : dSPorts){
                 System.out.print(port + "," );
+
             }
+            System.out.println();
         }
 
     }

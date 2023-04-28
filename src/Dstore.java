@@ -12,12 +12,13 @@ public class Dstore {
     //For data messages (i.e., file content), processes should send using the write()
     //method of OutputStream class and receive using the readNBytes() method of
     //InputStream class.
+    static int timeout = 0;
     public static void main(String[] args) throws Exception{
         //datastores should use different ports
 
         int port = Integer.parseInt(args[0]);
         int cport = Integer.parseInt(args[1]);
-        int timeout = Integer.parseInt(args[2]);
+        timeout = Integer.parseInt(args[2]);
         String file_folder = args[3];
         //int cport = 12345;
         //int timeout = 1000; //ms
@@ -123,6 +124,7 @@ public class Dstore {
             //listPorts.add(134);
             this.cport = cport;
             this.toStore = toStore;
+
         }
 
         public void run() {
@@ -132,6 +134,7 @@ public class Dstore {
         public void receiveMessage(){
             try {
                 System.out.println("Connection accepted : " + client);
+                client.setSoTimeout(timeout);
                 //Textual messages
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); //listens from port
                 PrintWriter out = new PrintWriter(client.getOutputStream(), true); //prints to datastore, replies
