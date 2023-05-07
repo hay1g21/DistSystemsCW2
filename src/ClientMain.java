@@ -26,10 +26,11 @@ public class ClientMain {
             throw new RuntimeException("clientto_store folder does not exist");
 
         // launch a single client
-        testClient(cport, timeout, downloadFolder, uploadFolder);
+        //testClient(cport, timeout, downloadFolder, uploadFolder);
 
-		/*
+
 		// launch a number of concurrent clients, each doing the same operations
+        /*
 		for (int i = 0; i < 10; i++) {
 			new Thread() {
 				public void run() {
@@ -38,7 +39,20 @@ public class ClientMain {
 			}.start();
 		}
 
-		 */
+         */
+
+        for(int i=0; i<5; i++){
+            new Thread() {
+                public void run() {
+                    testClient3(cport, timeout, downloadFolder, uploadFolder);
+                }
+            }.start();
+        }
+
+
+
+
+
     }
 
     public static void test2Client(int cport, int timeout, File downloadFolder, File uploadFolder) {
@@ -122,9 +136,9 @@ public class ClientMain {
 
 
                 //put code here
-                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
-                try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 client.list();
                 System.out.println("Finished");
                 while (true) {
@@ -171,6 +185,57 @@ public class ClientMain {
 			try { list(client); } catch(IOException e) { e.printStackTrace(); }
 
 			 */
+
+        } finally {
+            if (client != null)
+                try {
+                    client.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+
+    public static void testClient3(int cport, int timeout, File downloadFolder, File uploadFolder) {
+        Client client = null;
+
+        try {
+
+            client = new Client(cport, timeout, Logger.LoggingType.ON_FILE_AND_TERMINAL);
+
+            try {
+                int count = 0;
+                client.connect();
+                //client.send("Client I'm a client");
+                File fileList[] = uploadFolder.listFiles();
+                //System.out.println(fileList[0].getName());
+                //System.out.println(fileList[1].getName());
+                //System.out.println(fileList[2].getName());
+
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+
+                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+
+                //client.list();
+
+                //try { client.wrongStore(fileList[0].getName(), new byte[52]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.wrongLoad(fileList[0].getName(), 1); } catch(IOException e) { e.printStackTrace(); }
+
+
+                //put code here
+                //try all storing
+                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); System.out.println("Failed to Upload"); count--; }
+                //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                //client.list();
+                System.out.println("Successful: " + count);
+                System.out.println("Finished");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
 
         } finally {
             if (client != null)

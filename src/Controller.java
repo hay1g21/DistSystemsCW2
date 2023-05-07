@@ -452,6 +452,8 @@ public class Controller {
 
         int R;
 
+        Boolean exists = false;
+
         Integer previousPort; //for reloading
         Vector<Integer> triedPorts;
         ReceiverThread(Socket client, int R) {
@@ -527,18 +529,24 @@ public class Controller {
                             System.out.println("Not enough datastores");
                             out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
                         } else {
-                            Boolean exists = false;
+
                             //if file already exists return error
-                            for (FileStateObject obj : fileList) {
-                                if (obj.getFileName().equals(fileName)) {
-                                    System.out.println("Already exists");
-                                    exists = true;
+
+                                exists = false;
+                                for (FileStateObject obj : fileList) {
+                                    if (obj.getFileName().equals(fileName)) {
+                                        System.out.println(fileName + " Already exists in index");
+                                        exists = true;
+                                    }
+                                    System.out.println("Checking...");
                                 }
-                            }
+
+
                             if (exists) {
                                 out.println(Protocol.ERROR_FILE_ALREADY_EXISTS_TOKEN);
                             } else {
-
+                                System.out.println("File assumed to not exist! Proceeding with Store");
+                                //exists = false;
                                 //add file to index
                                 FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size), "store in progress");
                                 fileList.add(obj);
@@ -593,6 +601,7 @@ public class Controller {
                                 //increase latch value
                                 Controller.latch = new CountDownLatch(R);
                                 System.out.println("Latch closed. Value of latch: " + latch.getCount());
+                                System.out.println("New size of stored objs : " + fileList.size());
                             }
                         }
                     } else if (line.contains("LOAD") && !line.contains("RELOAD")) {
