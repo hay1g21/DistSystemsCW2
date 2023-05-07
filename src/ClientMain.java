@@ -122,8 +122,10 @@ public class ClientMain {
 
 
                 //put code here
-                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-                try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                client.list();
                 System.out.println("Finished");
                 while (true) {
                     try {

@@ -727,10 +727,13 @@ public class Controller {
                         if(exists){
                             //gets datastores storing file
                             for (Socket dataStore : removePorts) {
-                                PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
-                                //send remove messgae
+                                //may bug out here
+                                if(!dataStore.isClosed()){
+                                    PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
+                                    //send remove messgae
 
-                                outC.println(Protocol.REMOVE_TOKEN + " " + fileObj.getFileName());
+                                    outC.println(Protocol.REMOVE_TOKEN + " " + fileObj.getFileName());
+                                }
                             }
                             //wait for acks
                             System.out.println("Now waiting for remove countdown latch : value " + removeLatch.getCount());
@@ -764,8 +767,6 @@ public class Controller {
                             System.out.println(fileName + " does not exist!");
                             out.println(Protocol.ERROR_FILE_DOES_NOT_EXIST_TOKEN);
                         }
-
-
                         System.out.println("Remove finished");
                     } else if (line.contains("LIST")) {
                         System.out.println("Client wants a list of files: ");
@@ -787,6 +788,7 @@ public class Controller {
                     else {
                         System.out.println("Nothing special with this line");
                     }
+                    System.out.println("Operation Served. Now Performing Next operation.");
                 }
                 System.out.println("Closing client: " + client.getPort());
                 Integer toRemove = 0;
@@ -805,7 +807,7 @@ public class Controller {
                 portList.remove(remObj);
 
                 if(dropped){
-                    System.out.println("Datastore Failed");
+                    System.out.println("Datastore Dropped " + remObj.getdPort());
                 }
                 listAvailablePorts();
                 client.close();
@@ -815,13 +817,19 @@ public class Controller {
         }
 
         public void listAvailablePorts(){
-            System.out.println();
-            System.out.print("Ports: ");
-            for(int port : dSPorts){
-                System.out.print(port + "," );
+            try{
+                System.out.println();
+                System.out.print("Ports: ");
+                for(int port : dSPorts){
+                    System.out.print(port + "," );
 
+                }
+                System.out.println();
+            }catch (Exception e){
+                System.out.println("Error while listing ports");
+                e.printStackTrace();
             }
-            System.out.println();
+
         }
 
     }
