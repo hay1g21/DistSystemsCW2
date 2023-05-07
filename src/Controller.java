@@ -18,6 +18,7 @@ public class Controller {
     // Vector to store active clients
     static Vector<DataStoreThread> activeDataStores = new Vector<>(); //holds active threads of datastores
 
+    static Vector<PortListObject> portList = new Vector<>();
     static Vector<Integer> dSPorts = new Vector<Integer>();
     //stores list of files, not datastore related
 
@@ -488,7 +489,9 @@ public class Controller {
                         System.out.println("Port num: " + portNum);
                         //add port num
                         dSPorts.add(portNum);
+                        portList.add(new PortListObject(portNum, client.getPort()));
                         System.out.println("Num ports: " + dSPorts.size());
+                        System.out.println("Num ports: in obj =  " + portList.size());
                         listAvailablePorts();
 
                     }
@@ -786,6 +789,25 @@ public class Controller {
                     }
                 }
                 System.out.println("Closing client: " + client.getPort());
+                Integer toRemove = 0;
+                PortListObject remObj = null;
+                //find if the client port has a realting datastoreport
+                for(PortListObject pobj : portList){
+                    if(pobj.getcPort() == client.getPort()){
+                        System.out.println("Relating port");
+                        toRemove = pobj.getdPort();
+                        remObj = pobj;
+                    }else{
+                        System.out.println("Dropping client");
+                    }
+                }
+                Boolean dropped = dSPorts.remove(toRemove);
+                portList.remove(remObj);
+
+                if(dropped){
+                    System.out.println("Datastore Failed");
+                }
+                listAvailablePorts();
                 client.close();
             } catch (Exception e) {
                 System.err.println("error: " + e);
