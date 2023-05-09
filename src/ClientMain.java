@@ -26,7 +26,7 @@ public class ClientMain {
             throw new RuntimeException("clientto_store folder does not exist");
 
         // launch a single client
-        //testClient(cport, timeout, downloadFolder, uploadFolder);
+        testClient(cport, timeout, downloadFolder, uploadFolder);
 
 
 		// launch a number of concurrent clients, each doing the same operations
@@ -41,6 +41,7 @@ public class ClientMain {
 
          */
 
+        /*
         for(int i=0; i<5; i++){
             new Thread() {
                 public void run() {
@@ -48,6 +49,8 @@ public class ClientMain {
                 }
             }.start();
         }
+
+         */
 
 
 
@@ -136,7 +139,9 @@ public class ClientMain {
 
 
                 //put code here
+                //try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
                 try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 client.list();
@@ -205,6 +210,7 @@ public class ClientMain {
 
             try {
                 int count = 0;
+                int count2 = 0;
                 client.connect();
                 //client.send("Client I'm a client");
                 File fileList[] = uploadFolder.listFiles();
@@ -227,9 +233,10 @@ public class ClientMain {
                 //try all storing
                 try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); System.out.println("Failed to Upload"); count--; }
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
-                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); count2--; }
                 //client.list();
-                System.out.println("Successful: " + count);
+                System.out.println("Store Successful: " + count);
+                //System.out.println("Remove Successful: " + count2);
                 System.out.println("Finished");
 
             } catch (IOException e) {

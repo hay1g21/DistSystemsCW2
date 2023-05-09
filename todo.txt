@@ -21,6 +21,8 @@
 2. add timeouts -done
 --
 1. Find way to synchronise clients - No overlapping messages
+2. Evenly distribute files
+3. not enough datastores to remove operation
 java Controller cport R timeout rebalance_period
 
 java Dstore port cport timeout file_folder
