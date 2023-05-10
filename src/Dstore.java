@@ -173,7 +173,7 @@ public class Dstore {
                     }else if(line.contains("LOAD_DATA")){
                         System.out.println("Wants to load a file");
                         String[] split = line.split(" ");
-                        System.out.println("Storing file: " + split[1]);
+                        System.out.println("Loading file: " + split[1]);
 
                         File fileToLoad = new File(toStore + "/" + split[1]);
                         if(fileToLoad.exists()){
@@ -185,6 +185,7 @@ public class Dstore {
                                 System.out.println("*");
                                 outData.write(buf, 0, buflen);
                             }
+
                             System.out.println("Finished writing");
                             inp.close();
                         }else{

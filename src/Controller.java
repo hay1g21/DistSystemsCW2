@@ -543,6 +543,7 @@ public class Controller {
 
 
                                 if (exists) {
+                                    System.out.println("Already exists");
                                     out.println(Protocol.ERROR_FILE_ALREADY_EXISTS_TOKEN);
                                 } else {
                                     System.out.println("File assumed to not exist! Proceeding with Store");
@@ -566,6 +567,54 @@ public class Controller {
                                     }
                                     System.out.println("Size of countarray: " + countArray.size());
                                     Random random = new Random();
+                                    int rCount = 0;
+                                    int index = 0;
+                                    Boolean repeat = false;
+                                    while(rCount < R){
+                                        //datastore should store RF/N files
+                                        //int chosen = random.nextInt(1, listPorts.size());
+                                        //System.out.println(listPorts.size());
+                                        //choose and check
+                                        System.out.println("Checking " + dSPorts.get(index));
+                                        int count = 0;
+                                        //counts up how many files that port is storing
+                                        for(int port : countArray){
+                                            if(dSPorts.get(index) == port){
+                                                count++;
+                                            }
+                                        }
+                                        //if port is storing too many files ignore
+                                        System.out.println(dSPorts.get(index) + " has " + count + " stored files");
+                                        if(repeat){
+                                            //if there is a repeat in choosing ports, forcibly add a datastore
+                                            System.out.println("Imbalance so , Adding to port " + dSPorts.get(index));
+                                            chosenPorts = chosenPorts + " " + dSPorts.get(index);
+                                            if(!obj.getPorts().contains(dSPorts.get(index))){
+                                                obj.addPort(dSPorts.get(index));
+                                                rCount++;
+                                            }else{
+                                                System.out.println("Repeat");
+                                                repeat = true;
+                                            }
+                                        } else if (count+1 > high) {
+                                            System.out.println("Too many files, choosing a different one");
+
+                                        } else{
+                                            System.out.println("Available space, Adding to port " + dSPorts.get(index));
+                                            chosenPorts = chosenPorts + " " + dSPorts.get(index);
+                                            if(!obj.getPorts().contains(dSPorts.get(index))){
+                                                obj.addPort(dSPorts.get(index));
+                                                rCount++;
+                                            }else{
+                                                System.out.println("Repeat");
+                                                repeat = true;
+                                            }
+                                        }
+                                        index = (index + 1) % dSPorts.size();
+                                        System.out.println("Index now" + index);
+                                        //0
+                                    }
+                                    /*
                                     for (int i = 0; i < R; i++) {
                                         //datastore should store RF/N files
                                         //int chosen = random.nextInt(1, listPorts.size());
@@ -588,7 +637,9 @@ public class Controller {
                                             obj.addPort(dSPorts.get(i));
                                         }
                                     }
-                                    //System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
+
+                                     */
+                                    System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     //now wait for acknowlegements
                                     System.out.println("Now waiting for countdown latch : value " + latch.getCount());
@@ -746,61 +797,68 @@ public class Controller {
                         String lines[] = line.split(" ");
                         String fileName = lines[1];
 
-                        System.out.println("Preparing to remove " + fileName);
-                        Vector<Socket> removePorts = null;
-                        FileStateObject fileObj = null;
-                        Boolean exists = false;
-                        for (FileStateObject obj : fileList) {
-                            if (obj.getFileName().equals(fileName)) {
-                                System.out.println("Setting state " + obj.getState() + " to remove");
-                                obj.setState("remove in progress");
-                                exists = true;
-                                removePorts = obj.getSockets(); //gets list of ports holding the file
-                                fileObj = obj;
-                            }
-                        }
-                        if(exists){
-                            //gets datastores storing file
-                            for (Socket dataStore : removePorts) {
-                                //may bug out here
-                                if(!dataStore.isClosed()){
-                                    PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
-                                    //send remove messgae
-
-                                    outC.println(Protocol.REMOVE_TOKEN + " " + fileObj.getFileName());
-                                }
-                            }
-                            //wait for acks
-                            System.out.println("Now waiting for remove countdown latch : value " + removeLatch.getCount());
-
-                            removeLatch.await(timeout, TimeUnit.MILLISECONDS); //time out of base 1000
-                            System.out.println("Latch opened with value " + removeLatch.getCount());
-
-                            if(removeLatch.getCount() <= 0){
-                                //find file and update state, also remove it from the index
-                                FileStateObject objToRem = null;
-                                for (FileStateObject fileObject : Controller.fileList) {
-                                    if (fileObject.getFileName().equals(fileName)) {
-                                        //updatestate
-                                        System.out.println("Updating state of " + fileObject.getFileName() + " to removed");
-                                        fileObject.setState("remove complete");
-
-                                        System.out.println("State of " + fileObject.getFileName() + " now " + fileObject.getState());
-                                        objToRem = fileObject; //removes from index
-
+                        if(dSPorts.size() < R){
+                            System.out.println("Not enough datastores");
+                            out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
+                        }else {
+                            synchronized (this.getClass()) {
+                                System.out.println("Preparing to remove " + fileName);
+                                Vector<Socket> removePorts = null;
+                                FileStateObject fileObj = null;
+                                Boolean exists = false;
+                                for (FileStateObject obj : fileList) {
+                                    if (obj.getFileName().equals(fileName)) {
+                                        System.out.println("Setting state " + obj.getState() + " to remove");
+                                        obj.setState("remove in progress");
+                                        exists = true;
+                                        removePorts = obj.getSockets(); //gets list of ports holding the file
+                                        fileObj = obj;
                                     }
                                 }
-                                out.println(Protocol.REMOVE_COMPLETE_TOKEN);
-                                //remove file from index
-                                fileList.remove(objToRem);
-                            }else{
-                                System.out.println("Remove ACKs timedout!, latch value: " + removeLatch.getCount());
+                                if (exists) {
+                                    //gets datastores storing file
+                                    for (Socket dataStore : removePorts) {
+                                        //may bug out here
+                                        if (!dataStore.isClosed()) {
+                                            PrintWriter outC = new PrintWriter(dataStore.getOutputStream(), true);
+                                            //send remove messgae
+
+                                            outC.println(Protocol.REMOVE_TOKEN + " " + fileObj.getFileName());
+                                        }
+                                    }
+                                    //wait for acks
+                                    System.out.println("Now waiting for remove countdown latch : value " + removeLatch.getCount());
+
+                                    removeLatch.await(timeout, TimeUnit.MILLISECONDS); //time out of base 1000
+                                    System.out.println("Latch opened with value " + removeLatch.getCount());
+
+                                    if (removeLatch.getCount() <= 0) {
+                                        //find file and update state, also remove it from the index
+                                        FileStateObject objToRem = null;
+                                        for (FileStateObject fileObject : Controller.fileList) {
+                                            if (fileObject.getFileName().equals(fileName)) {
+                                                //updatestate
+                                                System.out.println("Updating state of " + fileObject.getFileName() + " to removed");
+                                                fileObject.setState("remove complete");
+
+                                                System.out.println("State of " + fileObject.getFileName() + " now " + fileObject.getState());
+                                                objToRem = fileObject; //removes from index
+
+                                            }
+                                        }
+                                        out.println(Protocol.REMOVE_COMPLETE_TOKEN);
+                                        //remove file from index
+                                        fileList.remove(objToRem);
+                                    } else {
+                                        System.out.println("Remove ACKs timedout!, latch value: " + removeLatch.getCount());
+                                    }
+                                    //increase latch value
+                                    Controller.removeLatch = new CountDownLatch(R);
+                                } else {
+                                    System.out.println(fileName + " does not exist!");
+                                    out.println(Protocol.ERROR_FILE_DOES_NOT_EXIST_TOKEN);
+                                }
                             }
-                            //increase latch value
-                            Controller.removeLatch = new CountDownLatch(R);
-                        }else{
-                            System.out.println(fileName + " does not exist!");
-                            out.println(Protocol.ERROR_FILE_DOES_NOT_EXIST_TOKEN);
                         }
                         System.out.println("Remove finished");
                     } else if (line.contains("LIST")) {
