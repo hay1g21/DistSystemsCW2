@@ -459,7 +459,6 @@ public class Controller {
         ReceiverThread(Socket client, int R) {
             this.client = client;
             this.R = R;
-            //listPorts.add(134);
             previousPort = 0;
             triedPorts = new Vector<Integer>();
         }
@@ -478,7 +477,6 @@ public class Controller {
                 OutputStream outData = client.getOutputStream(); //sends
                 String line;
 
-                //out.println("Acknowledged connection to client");
                 while ((line = in.readLine()) != null) {
                     System.out.println(line + " received, now choosing what to do");
                     //datastore stuff
@@ -503,16 +501,13 @@ public class Controller {
                         latch.countDown();
                         System.out.println("Latch now " + latch.getCount());
                         String filename = line.split(" ")[1];
-                        //reset latch
-                        //fileList.get(0).addPort(dataStore.getPort());
+
                         //add port to fileobject
                         for (FileStateObject obj : fileList) {
                             if (obj.getFileName().equals(filename)) {
                                 obj.addSocket(client); //add to the list of datastore sockets that is storing
                             }
                         }
-                        //Controller.latch = new CountDownLatch(R);
-                        //latch = Controller.latch;
 
                     } else if (line.contains("STORE")) {
                         System.out.println("Client wants to store file: ");
@@ -572,8 +567,6 @@ public class Controller {
                                     Boolean repeat = false;
                                     while(rCount < R){
                                         //datastore should store RF/N files
-                                        //int chosen = random.nextInt(1, listPorts.size());
-                                        //System.out.println(listPorts.size());
                                         //choose and check
                                         System.out.println("Checking " + dSPorts.get(index));
                                         int count = 0;
@@ -667,17 +660,10 @@ public class Controller {
                                         System.out.println("Removed");
                                     }
 
-
-                                    //PrintWriter outC = new PrintWriter(obj.getSockets().get(0).getOutputStream(), true); //prints to datastore, replies
-                                    //outC.println("Hello data store its me after a store");
-                                    //System.out.println("Finished");
-                                    //reset countdown latch
-
-
                                     //increase latch value
                                     Controller.latch = new CountDownLatch(R);
                                     System.out.println("Latch closed. Value of latch: " + latch.getCount());
-                                    System.out.println("New size of stored objs : " + fileList.size());
+                                    System.out.println("New size of stored files : " + fileList.size());
                                 }
                             }
                         }
