@@ -26,7 +26,7 @@ public class ClientMain {
             throw new RuntimeException("clientto_store folder does not exist");
 
         // launch a single client
-        //testClient(cport, timeout, downloadFolder, uploadFolder);
+        testClient(cport, timeout, downloadFolder, uploadFolder);
 
 
 		// launch a number of concurrent clients, each doing the same operations
@@ -45,7 +45,7 @@ public class ClientMain {
         for(int i=0; i<5; i++){
             new Thread() {
                 public void run() {
-                    testClient3(cport, timeout, downloadFolder, uploadFolder);
+                    //testClient3(cport, timeout, downloadFolder, uploadFolder);
                 }
             }.start();
         }
@@ -130,7 +130,35 @@ public class ClientMain {
                 System.out.println();
                 //System.out.println(fileList[2].getName());
 
-                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+
+                /*
+                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[2]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[4]); } catch(IOException e) { e.printStackTrace(); }
+
+                 */
+
+
+
+
+
+                /*
+                try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
+                try { client.remove(fileList[1].getName()); } catch(IOException e) { e.printStackTrace(); }
+                try { client.remove(fileList[2].getName()); } catch(IOException e) { e.printStackTrace(); }
+                try { client.remove(fileList[3].getName()); } catch(IOException e) { e.printStackTrace(); }
+                try { client.remove(fileList[4].getName()); } catch(IOException e) { e.printStackTrace(); }
+
+                 */
+
+
+                try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                try { client.load(fileList[2].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                try { client.load(fileList[3].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+                try { client.load(fileList[4].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 // try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
 
@@ -145,7 +173,7 @@ public class ClientMain {
                 //put code here
 
                 //try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
-                System.out.println(downloadFolder.listFiles()[0]);
+                //System.out.println(downloadFolder.listFiles()[0]);
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 client.list();

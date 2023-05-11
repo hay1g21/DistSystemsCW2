@@ -22,6 +22,7 @@
 --
 1. Find way to synchronise clients - No overlapping messages
 2. Evenly distribute files - sort of done
+2.1. Prioritise low files
 3. not enough datastores to remove operation - done
 java Controller cport R timeout rebalance_period
 
