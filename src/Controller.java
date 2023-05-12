@@ -16,7 +16,7 @@ public class Controller {
     static CountDownLatch latch;
     static CountDownLatch removeLatch;
     // Vector to store active clients
-    static Vector<DataStoreThread> activeDataStores = new Vector<>(); //holds active threads of datastores
+    static Vector<DataStoreThread> activeDataStores = new Vector<DataStoreThread>(); //holds active threads of datastores
 
     static Vector<PortListObject> portList = new Vector<>();
     static Vector<Integer> dSPorts = new Vector<Integer>();
@@ -44,7 +44,7 @@ public class Controller {
         removeLatch = new CountDownLatch(R);
         //holds list of datastore ports to send to client
 
-        System.out.println("Server started on port: " + cport);
+        System.out.println("Controller started on port: " + cport + ". R = " + R);
         ServerSocket ss = null; //makes server socket
         //first wants datastores to join
         //at least R amount
@@ -452,7 +452,7 @@ public class Controller {
 
         int R;
 
-        Boolean exists = false;
+        boolean exists = false;
 
         Integer previousPort; //for reloading
         Vector<Integer> triedPorts;
@@ -526,10 +526,11 @@ public class Controller {
                         } else {
 
                             //if file already exists return error
+                            FileStateObject obj = null;
                             synchronized (this.getClass()) {
                                 exists = false;
-                                for (FileStateObject obj : fileList) {
-                                    if (obj.getFileName().equals(fileName)) {
+                                for (FileStateObject checkObj : fileList) {
+                                    if (checkObj.getFileName().equals(fileName)) {
                                         //System.out.println(fileName + " Already exists in index");
                                         exists = true;
                                     }
@@ -544,19 +545,19 @@ public class Controller {
                                     System.out.println("File assumed to not exist! Proceeding with Store");
                                     //exists = false;
                                     //add file to index
-                                    FileStateObject obj = new FileStateObject(fileName, Integer.parseInt(size), "store in progress");
+                                    obj = new FileStateObject(fileName, Integer.parseInt(size), "store in progress");
                                     fileList.add(obj);
-                                    ArrayList<Integer> countArray = new ArrayList();
+                                    ArrayList<Integer> countArray = new ArrayList<Integer>();
                                     //make list of how many files each is holding
                                     //calculate how many files each datastore should hold
                                     //RF/N
-                                    int low = (int)Math.floor((float)R*(float)fileList.size()/(float)portList.size());
-                                    int high = (int)Math.ceil((float)R*(float)fileList.size()/(float)portList.size());
+                                    int low = (int) Math.floor((float) R * (float) fileList.size() / (float) portList.size());
+                                    int high = (int) Math.ceil((float) R * (float) fileList.size() / (float) portList.size());
 
                                     System.out.println("Datastores need to hold between " + low + "and " + high + " Files");
 
-                                    for (FileStateObject file: fileList){
-                                        if(file.getPorts().size() > 0){
+                                    for (FileStateObject file : fileList) {
+                                        if (file.getPorts().size() > 0) {
                                             countArray.addAll(file.getPorts());
                                         }
                                     }
@@ -564,105 +565,75 @@ public class Controller {
                                     Random random = new Random();
                                     int rCount = 0;
                                     int index = 0;
-                                    Boolean repeat = false;
-                                    Boolean checkLow = true; //flag for checking datastores with low amount of file
-                                    Boolean escape = false; //caution for breaking while loop
-                                    while(rCount < R){
+                                    boolean repeat = false;
+                                    boolean checkLow = true; //flag for checking datastores with low amount of file
+                                    boolean escape = false; //caution for breaking while loop
+                                    while (rCount < R) {
                                         //datastore should store RF/N files - Below limit first, then normal, then any
                                         //choose and check
                                         System.out.println("Checking " + dSPorts.get(index));
                                         int count = 0;
                                         //counts up how many files that port is storing
-                                        for(int port : countArray){
-                                            if(dSPorts.get(index) == port){
+                                        for (int port : countArray) {
+                                            if (dSPorts.get(index) == port) {
                                                 count++;
                                             }
                                         }
                                         System.out.println(dSPorts.get(index) + " has " + count + " stored files");
-                                        if(checkLow){
+                                        if (checkLow) {
                                             //Check for less than the limit. then add
-                                            if(count < low){
+                                            if (count < low) {
                                                 //add this datastore if it hasnt repeated
                                                 System.out.println("Below Limit. Available space, Adding to port " + dSPorts.get(index));
                                                 chosenPorts = chosenPorts + " " + dSPorts.get(index);
 
-                                                if(!obj.getPorts().contains(dSPorts.get(index))){
+                                                if (!obj.getPorts().contains(dSPorts.get(index))) {
                                                     obj.addPort(dSPorts.get(index));
                                                     rCount++;
-                                                }else{
+                                                } else {
                                                     System.out.println("Repeating: Ignoring datastore");
                                                     //repeat = true;
                                                 }
                                             }
-                                        }else if(repeat){
+                                        } else if (repeat) {
                                             //Check for any datastores
                                             //if there is a repeat in choosing ports, forcibly add a datastore
                                             System.out.println("Imbalance so Adding to port " + dSPorts.get(index));
                                             chosenPorts = chosenPorts + " " + dSPorts.get(index);
-                                            if(!obj.getPorts().contains(dSPorts.get(index))){
+                                            if (!obj.getPorts().contains(dSPorts.get(index))) {
                                                 obj.addPort(dSPorts.get(index));
                                                 rCount++;
-                                            }else{
+                                            } else {
                                                 System.out.println("Repeating: Ignoring datastore");
                                                 //repeat = true;
                                             }
-                                        }else{
+                                        } else {
                                             //check normally
-                                            if (count+1 > high) {
+                                            if (count + 1 > high) {
                                                 System.out.println("Too many files, choosing a different one");
 
-                                            } else{
+                                            } else {
                                                 System.out.println("Available space, Adding to port " + dSPorts.get(index));
                                                 chosenPorts = chosenPorts + " " + dSPorts.get(index);
-                                                if(!obj.getPorts().contains(dSPorts.get(index))){
+                                                if (!obj.getPorts().contains(dSPorts.get(index))) {
                                                     obj.addPort(dSPorts.get(index));
                                                     rCount++;
-                                                }else{
+                                                } else {
                                                     System.out.println("Repeating: Ignoring datastore");
                                                     //repeat = true;
                                                 }
                                             }
                                         }
-                                        //if port is storing too many files ignore
-
-                                        /*
-                                        if(repeat){
-                                            //if there is a repeat in choosing ports, forcibly add a datastore
-                                            System.out.println("Imbalance so Adding to port " + dSPorts.get(index));
-                                            chosenPorts = chosenPorts + " " + dSPorts.get(index);
-                                            if(!obj.getPorts().contains(dSPorts.get(index))){
-                                                obj.addPort(dSPorts.get(index));
-                                                rCount++;
-                                            }else{
-                                                System.out.println("Repeating: Ignoring datastore");
-                                                //repeat = true;
-                                            }
-                                        } else if (count+1 > high) {
-                                            System.out.println("Too many files, choosing a different one");
-
-                                        } else{
-                                            System.out.println("Available space, Adding to port " + dSPorts.get(index));
-                                            chosenPorts = chosenPorts + " " + dSPorts.get(index);
-                                            if(!obj.getPorts().contains(dSPorts.get(index))){
-                                                obj.addPort(dSPorts.get(index));
-                                                rCount++;
-                                            }else{
-                                                System.out.println("Repeating: Ignoring datastore");
-                                                //repeat = true;
-                                            }
-                                        }
-
-                                         */
                                         index = (index + 1) % dSPorts.size();
-                                        if(index == 0 && rCount < R){
+                                        if (index == 0 && rCount < R) {
                                             System.out.println("Loop around");
-                                            if(checkLow){
+                                            if (checkLow) {
                                                 System.out.println("No longer checking low files");
                                                 checkLow = false;
-                                            }else if(!checkLow){
+                                            } else if (!checkLow) {
                                                 System.out.println("No longer checking medium: Now checking any");
                                                 repeat = true;
-                                            }else if(!checkLow && repeat){
+                                            } else if (!checkLow && repeat) {
                                                 System.out.println("Breaking loop, somthing has gone wrong!");
                                                 break;
                                             }
@@ -671,7 +642,10 @@ public class Controller {
                                         System.out.println("Index now" + index);
                                         //0
                                     }
-
+                                }
+                            }
+                                    //synchronization should end here
+                                if(!exists) {
                                     System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     //now wait for acknowlegements
@@ -705,7 +679,7 @@ public class Controller {
                                     System.out.println("Latch closed. Value of latch: " + latch.getCount());
                                     System.out.println("New size of stored files : " + fileList.size());
                                 }
-                            }
+
                         }
                     } else if (line.contains("LOAD") && !line.contains("RELOAD")) {
                         System.out.println("Client wants to load a file");
@@ -725,7 +699,7 @@ public class Controller {
 
                             //check if file exists also prepare fileobject
                             FileStateObject fileObj = null;
-                            Boolean exists = false;
+                            boolean exists = false;
                             for (FileStateObject obj : fileList) {
                                 if (obj.getFileName().equals(fileName) && !obj.getState().equals("store in progress")) {
                                     System.out.println("Exists");
@@ -821,7 +795,7 @@ public class Controller {
                                 System.out.println("Preparing to remove " + fileName);
                                 Vector<Socket> removePorts = null;
                                 FileStateObject fileObj = null;
-                                Boolean exists = false;
+                                boolean exists = false;
                                 for (FileStateObject obj : fileList) {
                                     if (obj.getFileName().equals(fileName)) {
                                         System.out.println("Setting state " + obj.getState() + " to remove");
@@ -913,7 +887,7 @@ public class Controller {
                     }
                 }
                 //remove from list of ports and list of port objects
-                Boolean dropped = dSPorts.remove(toRemove);
+                boolean dropped = dSPorts.remove(toRemove);
                 portList.remove(remObj);
 
                 if(dropped){

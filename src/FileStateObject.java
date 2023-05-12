@@ -2,11 +2,14 @@ import java.io.File;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 public class FileStateObject {
     String fileName;
     int fileSize;
     String state;
+
+    CountDownLatch countDownLatch;
 
     Vector<Integer> ports = new Vector<Integer>();
 
@@ -46,6 +49,15 @@ public class FileStateObject {
     public void addPort(int port) {
         //add port to list that stores the file
         ports.add(port);
+    }
+
+    public void setCountDownLatch(int R){
+        countDownLatch = new CountDownLatch(R);
+
+    }
+
+    public CountDownLatch getCountDownLatch(){
+        return countDownLatch;
     }
 
     public Vector<Integer> getPorts() {

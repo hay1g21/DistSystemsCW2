@@ -21,8 +21,12 @@
 2. add timeouts -done
 --
 1. Find way to synchronise clients - No overlapping messages
-2. Evenly distribute files - sort of done
-2.1. Prioritise low files
+2. Evenly distribute files - done
+2.1. Prioritise low files - done
+3. list of latch objects for each file... make latch list.
+when new latch object needed create and add to list, along with filename.
+when counting down - ack finds correct latch in list and decrements
+finally after timeout, finds associated latch and checks its countdown.
 3. not enough datastores to remove operation - done
 java Controller cport R timeout rebalance_period
 
