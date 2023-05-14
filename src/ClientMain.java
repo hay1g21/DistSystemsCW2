@@ -129,19 +129,20 @@ public class ClientMain {
                 //System.out.println(fileList[2].getName());
 
 
-                /*
-                try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
-                try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
-                try { client.store(fileList[2]); } catch(IOException e) { e.printStackTrace(); }
-                try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
-                try { client.store(fileList[4]); } catch(IOException e) { e.printStackTrace(); }
 
-                 */
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[2]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[4]); } catch(IOException e) { e.printStackTrace(); }
+
+                
+                //try { client.store(fileList[2]); } catch(IOException e) { e.printStackTrace(); }
 
                 try { client.wrongStore(fileList[0].getName(), new byte[52]); } catch(IOException e) { e.printStackTrace(); }
 
 
-                //try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
 
                 /*
                 try { client.remove(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
@@ -152,14 +153,17 @@ public class ClientMain {
 
                  */
                 //try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
+
                 /*
                 try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 try { client.load(fileList[1].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 try { client.load(fileList[2].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 try { client.load(fileList[3].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 try { client.load(fileList[4].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
-                /*
+
                  */
+
+
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 // try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
 
@@ -265,12 +269,16 @@ public class ClientMain {
                 //put code here
                 //try all storing
                 //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); System.out.println("Failed to Upload"); count--; }
-
+                //try { client.store(fileList[0]); } catch(IOException e) { e.printStackTrace(); }
+                try { client.store(fileList[2]); } catch(IOException e) { e.printStackTrace(); }
+                //try { client.store(fileList[3]); } catch(IOException e) { e.printStackTrace(); }
                 try { client.store(fileList[1]); } catch(IOException e) { e.printStackTrace();  count2--; }
+
+                try { client.remove(fileList[1].getName()); } catch(IOException e) { e.printStackTrace(); count2--; }
 
                 //try { client.load(fileList[0].getName()); } catch(IOException e) { e.printStackTrace(); }
                 //try { client.remove(fileList[1].getName()); } catch(IOException e) { e.printStackTrace(); count2--; }
-                //client.list();
+                client.list();
                 //try { client.load(fileList[0].getName(), downloadFolder); } catch(IOException e) { e.printStackTrace(); }
                 //System.out.println("Store Successful: " + count);
                 System.out.println("Store2 Successful: " + count2);

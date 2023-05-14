@@ -497,17 +497,34 @@ public class Controller {
                     }
                     else if (line.contains("STORE_ACK")) {
                         //countdown the latch
-                        System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + latch.getCount());
-                        latch.countDown();
-                        System.out.println("Latch now " + latch.getCount());
+                        //find corresponding latch
                         String filename = line.split(" ")[1];
-
+                        FileStateObject storedFile = null;
+                        //add port to fileobject
+                        for (FileStateObject obj : fileList) {
+                            if (obj.getFileName().equals(filename)) {
+                                storedFile = obj;
+                                //obj.addSocket(client); //add to the list of datastore sockets that is storing
+                            }
+                        }
+                        CountDownLatch fileLatch = storedFile.getCountDownLatch();
+                        System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + fileLatch.getCount());
+                        fileLatch.countDown();
+                        System.out.println("Latch now " + fileLatch.getCount());
+                        //System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + latch.getCount());
+                        //latch.countDown();
+                        //System.out.println("Latch now " + latch.getCount());
+                        //add port to fileobject
+                        storedFile.addSocket(client); //add to the list of datastore sockets that is storing
+                        /*
                         //add port to fileobject
                         for (FileStateObject obj : fileList) {
                             if (obj.getFileName().equals(filename)) {
                                 obj.addSocket(client); //add to the list of datastore sockets that is storing
                             }
                         }
+
+                         */
 
                     } else if (line.contains("STORE")) {
                         System.out.println("Client wants to store file: ");
@@ -649,14 +666,16 @@ public class Controller {
                                     System.out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     out.println(Protocol.STORE_TO_TOKEN + chosenPorts);
                                     //now wait for acknowlegements
-                                    System.out.println("Now waiting for countdown latch : value " + latch.getCount());
-
-                                    latch.await(timeout, TimeUnit.MILLISECONDS); //time out of base 1000
-                                    System.out.println("Latch opened with value " + latch.getCount());
+                                    obj.setCountDownLatch(R);
+                                    CountDownLatch fileLatch = obj.getCountDownLatch();
+                                    //set the latch
+                                    System.out.println("Now waiting for countdown latch : value " + fileLatch.getCount());
+                                    fileLatch.await(timeout, TimeUnit.MILLISECONDS); //time out of base 1000
+                                    System.out.println("Latch opened with value " + fileLatch.getCount());
                                     //check if receieved all acks. if not dont send message and remove file from index
-                                    if (latch.getCount() <= 0) {
+                                    if (fileLatch.getCount() <= 0) {
                                         System.out.println("All acks recieved");
-                                        out.println(Protocol.STORE_COMPLETE_TOKEN);
+
                                         //find file and update state
                                         for (FileStateObject fileObject : Controller.fileList) {
                                             if (fileObject.getFileName().equals(fileName)) {
@@ -666,6 +685,7 @@ public class Controller {
                                                 System.out.println("State of " + fileObject.getFileName() + " now " + fileObject.getState());
                                             }
                                         }
+                                        out.println(Protocol.STORE_COMPLETE_TOKEN);
                                     } else {
                                         System.out.println("Latch timedout! Removing " + obj.getFileName());
                                         //remove file from index
@@ -675,8 +695,8 @@ public class Controller {
                                     }
 
                                     //increase latch value
-                                    Controller.latch = new CountDownLatch(R);
-                                    System.out.println("Latch closed. Value of latch: " + latch.getCount());
+                                    //Controller.latch = new CountDownLatch(R);
+                                    System.out.println("Latch closed. Value of latch: " + fileLatch.getCount());
                                     System.out.println("New size of stored files : " + fileList.size());
                                 }
 
