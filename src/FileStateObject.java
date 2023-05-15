@@ -11,6 +11,8 @@ public class FileStateObject {
 
     CountDownLatch countDownLatch;
 
+    CountDownLatch remCountDownLatch;
+
     Vector<Integer> ports = new Vector<Integer>();
 
     Vector<Socket> sockets = new Vector<>();
@@ -56,8 +58,17 @@ public class FileStateObject {
 
     }
 
+
+    public void setRemCountDownLatch(int R){
+        remCountDownLatch = new CountDownLatch(R);
+    }
+
     public CountDownLatch getCountDownLatch(){
         return countDownLatch;
+    }
+
+    public CountDownLatch getRemCountDownLatch(){
+        return remCountDownLatch;
     }
 
     public Vector<Integer> getPorts() {

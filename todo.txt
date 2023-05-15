@@ -20,14 +20,20 @@
 1. put datastore listener and client listener into one thread - done
 2. add timeouts -done
 --
-1. Find way to synchronise clients - No overlapping messages
+1. Find way to synchronise clients - No overlapping messages - Sort of done
 2. Evenly distribute files - done
 2.1. Prioritise low files - done
 3. list of latch objects for each file... make latch list.
+
+
 when new latch object needed create and add to list, along with filename.
 when counting down - ack finds correct latch in list and decrements
 finally after timeout, finds associated latch and checks its countdown.
 3. not enough datastores to remove operation - done
+
+--
+1. Make sure failure is all accounted for
+2. Change read method to readNBytes
 java Controller cport R timeout rebalance_period
 
 java Dstore port cport timeout file_folder
