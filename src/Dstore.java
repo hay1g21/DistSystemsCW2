@@ -43,6 +43,7 @@ public class Dstore {
             controllerSocket = new Socket(address, cport); //sends to cport -controller listens at this port
             dSSocket = new ServerSocket(port); //port to listen for messages this way, make it server socket??
             System.out.println("Connected to " + controllerSocket.getLocalPort());
+            System.out.println("Connected to " + controllerSocket.getPort());
             new Thread(new ControllerListener(port,controllerSocket,uploadFolder)).start();
 
             while(true) {
@@ -53,55 +54,6 @@ public class Dstore {
                 }catch(Exception e) { System.err.println("error: " + e); }
             }
 
-
-            //loops for connections
-
-            //System.out.println("Socket started on port:" + dSSocket.getLocalPort());
-            //PrintWriter out = new PrintWriter(controllerSocket.getOutputStream(), true);
-            //listens to textual messages from the controller
-            //BufferedReader in = new BufferedReader(new InputStreamReader(controllerSocket.getInputStream()));
-            //listens to data messages from controller
-            //InputStream inData = controllerSocket.getInputStream();
-            //filereading test
-
-            //File testFile = new File(uploadFolder+"/file2.txt");
-            //System.out.println(testFile.getAbsolutePath());
-            //FileOutputStream fileOut = new FileOutputStream(testFile);
-
-            /*
-            out.println(Protocol.JOIN_TOKEN + " " + port);
-
-            while(true){
-                //Thread.sleep(1000);
-                System.out.println("I'm still alive");
-                //get a connection to listen for messages
-                String line;
-                while((line = in.readLine()) != null) {
-                    System.out.println(line + " received");
-                    break;
-                }
-
-                out.println("SEND");
-                //try reading a file, needs a fileoutput stream
-                //gets a buffer
-                System.out.println("Waiting for file");
-                byte[] buf = new byte[1000]; int buflen;
-                while ((buflen=inData.read(buf)) != -1){
-                    System.out.println("*");
-                    fileOut.write(buf,0,buflen);
-                    System.out.println("File Finished Reading");
-                    break;
-
-                }
-
-
-                System.out.println("Done waiting, looping back");
-                //inData.close();
-                fileOut.close();
-            }
-
-
-             */
 
         } catch(Exception e) { System.err.println("error: " + e);
         } finally {
@@ -155,17 +107,24 @@ public class Dstore {
                         System.out.println("Storing file: " + split[1] + " with size " + split[2]);
                         File newFile = new File(toStore + "/" + split[1]);
                         byte[] buf = new byte[Integer.parseInt(split[2])];
-                        int buflen;
+                        int buflen = Integer.parseInt(split[2]);
 
                         FileOutputStream fileOut = new FileOutputStream(newFile);
                         //send ack and prepare to read
                         out.println(Protocol.ACK_TOKEN);
                         //now read in file
+                        //readNbytes
+                        buflen = inData.readNBytes(buf, 0,buflen);
+                        System.out.println("*Writing*");
+                        fileOut.write(buf, 0, buflen);
+                        /*
                         while ((buflen = inData.read(buf)) != -1) {
                             System.out.println("*Writing*");
                             fileOut.write(buf, 0, buflen);
                             break;
                         }
+
+                         */
                         System.out.println("Finished reading file " + newFile.getName() + ", sending ack");
                         //send acknowledgement to controller
                         outC.println(Protocol.STORE_ACK_TOKEN + " " + newFile.getName());

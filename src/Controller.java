@@ -141,25 +141,15 @@ public class Controller {
                                 //obj.addSocket(client); //add to the list of datastore sockets that is storing
                             }
                         }
-                        CountDownLatch fileLatch = storedFile.getCountDownLatch();
-                        System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + fileLatch.getCount());
-                        fileLatch.countDown();
-                        System.out.println("Latch now " + fileLatch.getCount());
-                        //System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + latch.getCount());
-                        //latch.countDown();
-                        //System.out.println("Latch now " + latch.getCount());
-                        //add port to fileobject
-                        storedFile.addSocket(client); //add to the list of datastore sockets that is storing
-                        /*
-                        //add port to fileobject
-                        for (FileStateObject obj : fileList) {
-                            if (obj.getFileName().equals(filename)) {
-                                obj.addSocket(client); //add to the list of datastore sockets that is storing
-                            }
+                        if(storedFile != null){
+                            CountDownLatch fileLatch = storedFile.getCountDownLatch();
+                            System.out.println("Message has been successfully sent by dataStore, decrement ack from value: " + fileLatch.getCount());
+                            fileLatch.countDown();
+                            System.out.println("Latch now " + fileLatch.getCount());
+                            storedFile.addSocket(client); //add to the list of datastore sockets that is storing
+                        }else{
+                            System.out.println("Getting store countdown latch failed");
                         }
-
-                         */
-
                     } else if (line.contains("STORE")) {
                         System.out.println("Client wants to store file: ");
                         //parse message
@@ -218,11 +208,11 @@ public class Controller {
                                     int index = 0;
                                     boolean repeat = false; //flag for checking any datastores
                                     boolean checkLow = true; //flag for checking datastores with low amount of file
-                                    boolean escape = false; //caution for breaking while loop
+                                    //boolean escape = false; //caution for breaking while loop
                                     while (rCount < R) {
                                         //datastore should store RF/N files - Below limit first, then normal, then any
                                         //choose and check
-                                        System.out.println("Checking " + dSPorts.get(index));
+                                        //System.out.println("Checking " + dSPorts.get(index));
                                         int count = 0;
                                         //counts up how many files that port is storing
                                         for (int port : countArray) {
@@ -375,7 +365,7 @@ public class Controller {
                                 System.out.println("Now picking datastore");
                                 //do one for now
                                 //get list of ports that store the datastore
-                                Vector<Integer> availablePorts = fileObj.getPorts();
+                                Vector<Integer> availablePorts = new Vector<Integer>(fileObj.getPorts());
                                 chosenPorts = chosenPorts + " " + availablePorts.get(0);
                                 //add to previously tried port
                                 previousPort = availablePorts.get(0);
@@ -393,41 +383,45 @@ public class Controller {
                         String fileName = lines[1];
                         //prepare size
                         int size = 0;
-                        System.out.println("Preparing to reload " + fileName);
-                        //get R ports
-                        String chosenPorts = "";
-                        //remove port from tried ports
-                        System.out.println("Size of listports " + dSPorts.size());
-                        if(triedPorts.size() > 0){
-                            System.out.println("REMOVING");
-                            System.out.println("Tried ports : " + triedPorts.get(0));
-                            triedPorts.remove(previousPort);
-                        }
-                        System.out.println("Ports left: " + triedPorts.size());
-                        if (triedPorts.size() <= 0){
-                            System.out.println("No ports left, send back error load");
-                            out.println(Protocol.ERROR_LOAD_TOKEN);
-                        }else{
-                            //get file size
-                            //FileStateObject fileObj = null;
-                            for (FileStateObject obj : fileList) {
-                                if (obj.getFileName().equals(fileName) && obj.getState().equals("store complete")) {
-                                    System.out.println("Exists");
-                                    size = obj.getFileSize();
-                                    System.out.println("State = " + obj.getState());
-                                    //fileObj = obj;
-                                }
+                        if (dSPorts.size() < R) {
+                            System.out.println("Not enough datastores");
+                            out.println(Protocol.ERROR_NOT_ENOUGH_DSTORES_TOKEN);
+                        } else {
+                            System.out.println("Preparing to reload " + fileName);
+                            //get R ports
+                            String chosenPorts = "";
+                            //remove port from tried ports
+                            System.out.println("Size of listports " + dSPorts.size());
+                            if(triedPorts.size() > 0){
+                                //System.out.println("REMOVING");
+                                //System.out.println("Tried port : " + triedPorts.get(0));
+                                triedPorts.remove(previousPort);
                             }
-                            System.out.println("Selecting other port");
-                            //now selects a new port
-                            chosenPorts = chosenPorts + " " + triedPorts.get(0);
-                            previousPort = triedPorts.get(0);
-                            System.out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
-                            out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
+                            System.out.println("Ports left: " + triedPorts.size());
+                            if (triedPorts.size() <= 0){
+                                System.out.println("No ports left, send back error load");
+                                out.println(Protocol.ERROR_LOAD_TOKEN);
+                            }else{
+                                //get file size
+                                //FileStateObject fileObj = null;
+                                for (FileStateObject obj : fileList) {
+                                    if (obj.getFileName().equals(fileName) && obj.getState().equals("store complete")) {
+                                        System.out.println("Exists");
+                                        size = obj.getFileSize();
+                                        System.out.println("State = " + obj.getState());
+                                        //fileObj = obj;
+                                    }
+                                }
+                                System.out.println("Selecting other port");
+                                //now selects a new port
+                                chosenPorts = chosenPorts + " " + triedPorts.get(0);
+                                previousPort = triedPorts.get(0);
+                                System.out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
+                                out.println(Protocol.LOAD_FROM_TOKEN + chosenPorts + " " + size);
 
+                            }
+                            //check how many available ports are left
                         }
-                        //check how many available ports are left
-
                     } //datastore stuff
                     else if (line.contains("REMOVE_ACK")) {
                         String filename = line.split(" ")[1];
@@ -435,21 +429,25 @@ public class Controller {
                         FileStateObject removedFile = null;
 
                         for (FileStateObject obj : fileList) {
-                            System.out.println("Does " + obj.fileName + " equal " + filename);
+                            //System.out.println("Does " + obj.fileName + " equal " + filename);
                             if (obj.getFileName().equals(filename)) {
                                 removedFile = obj;
                             }
                         }
-                        CountDownLatch removedFileLatch = removedFile.getRemCountDownLatch();
-                        //countdown the latch
-                        System.out.println("Message has been sent, decrement remove ack from value: " +removedFileLatch.getCount());
-                        removedFileLatch.countDown();
+                        if(removedFile != null){
+                            CountDownLatch removedFileLatch = removedFile.getRemCountDownLatch();
+                            //countdown the latch
+                            System.out.println("Message has been sent, decrement remove ack from value: " +removedFileLatch.getCount());
+                            removedFileLatch.countDown();
 
-                        System.out.println("Latch now " + removedFileLatch.getCount());
+                            System.out.println("Latch now " + removedFileLatch.getCount());
 
 
-                        //Controller.removeLatch = new CountDownLatch(R);
-                        System.out.println("*Decrement complete*");
+                            //Controller.removeLatch = new CountDownLatch(R);
+                            System.out.println("*Decrement complete*");
+                        }else{
+                            System.out.println("Error during getting Remove countdown latch");
+                        }
                     }
                     else if (line.contains("REMOVE")) {
                         System.out.println("Client wants to remove files");
@@ -565,7 +563,9 @@ public class Controller {
                 portList.remove(remObj);
 
                 if(dropped){
-                    System.out.println("Datastore Dropped " + remObj.getdPort());
+                    if(remObj != null){
+                        System.out.println("Datastore Dropped " + remObj.getdPort());
+                    }
                 }
                 System.out.println("Dropping client");
                 listAvailablePorts();
